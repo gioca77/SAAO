@@ -50,7 +50,7 @@ Function to evaluate the trend in accident time series
   timeseriesanalysis(accidents = example2_timeserie, lang = "de")
   test <- timeseriesanalysis(accidents = example2_timeserie, lang = "it")
   print(test)
-  # plot(test)
+  plot(test)
   summary(test)
   timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex1)
   timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex2)

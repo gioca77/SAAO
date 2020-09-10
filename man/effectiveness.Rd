@@ -55,12 +55,11 @@ Traffic accidents before and after the implementation of a traffic measure are a
 model is displayed. The exposure can optionally be considered as an offset.
 }
 \examples{
-  # example
   ex1 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
   print(ex1)
-  # plot(ex1)
-  # plot_ci(ex1)
-  # summary(ex1)
+  plot(ex1)
+  plot_ci(ex1)
+  summary(ex1)
   ex2 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
   ex3 <- effectiveness(accidents = example_measure_effect_and_trend , measure_start = '1.1.2011', measure_end = '1.1.2011')
   ex4 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1)
