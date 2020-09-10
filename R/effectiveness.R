@@ -493,7 +493,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
 
 #' Function to directly plot confidence interval of measure
 #'
-#' @param object output of effectiveness-Funktion
+#' @param object output of effectiveness-Function
 
 plot_ci <- function(object)
 {
@@ -514,7 +514,7 @@ plot_ci <- function(object)
   }
   sum_output <- list(model = object$fit, modelname=object$modelname, data = object$data,
                      p_value_measure = object$pvalue_measure, p_value_trend = object$pvalue_trend,
-                     p_value_interaction= object$pvalue_interaction)
+                     p_value_interaction = object$pvalue_interaction)
   sum_output
 }
 

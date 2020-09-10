@@ -7,7 +7,7 @@
 plot_ci(object)
 }
 \arguments{
-\item{object}{output of effectiveness-Funktion}
+\item{object}{output of effectiveness-Function}
 }
 \description{
 Function to directly plot confidence interval of measure
