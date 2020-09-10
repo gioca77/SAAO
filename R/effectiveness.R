@@ -6,7 +6,7 @@
 #' @param accidents vector with accident data. The following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
 #' @param measure_start Start of the implementation of measures (format '2014-04-22', '2014/04/22' respectively '22.4.2014')
 #' @param measure_end End of measure implementation respectively first day after the measure (format '2014-04-22', '2014/04/22' respectively '22.4.2014')
-#' @param exposition Dataframe with expositions data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
+#' @param exposition optinal Dataframe with expositions data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
 #' @param from From which date or year (1.1) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
 #' @param main optional title for the plot
@@ -15,7 +15,7 @@
 #' @param max_y optional maximum value for the y-axis
 #' @param KI_plot TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)
 #' @param silent parameter to suppress error messages during model evaluation
-#' @param lang language for output (en, fr, de or it)
+#' @param lang language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
 #'   # example

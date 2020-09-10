@@ -20,9 +20,9 @@ earlywarning(
 )
 }
 \arguments{
-\item{accidents}{Vector with accident data}
+\item{accidents}{vector with accident data. The following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
 
-\item{exposition}{Dataframe with Expositionsdata (DTV) DEFAULT NULL}
+\item{exposition}{optinal Dataframe with expositions data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
 
 \item{n}{number of simulations}
 
@@ -40,7 +40,7 @@ earlywarning(
 
 \item{max_y}{optional maximum value for the y-axis}
 
-\item{lang}{language for output (en, fr, de or it)}
+\item{lang}{language for output ("en", "fr", "de" or "it")}
 }
 \description{
 Function to determine the prediction interval for new value in time series

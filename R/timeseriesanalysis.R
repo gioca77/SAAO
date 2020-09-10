@@ -1,7 +1,7 @@
 #' Function to evaluate the trend in accident time series
 #'
-#' @param accidents Vector with accident data
-#' @param exposition Dataframe with Expositionsdata (DTV) DEFAULT NULL
+#' @param accidents vector with accident data. The following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
+#' @param exposition optinal Dataframe with expositions data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
 #' @param from From which date or year (1.1) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
 #' @param show_outliers TRUE/FALSE if outliers with Pearson residual greater than 2 should be visualized in color
@@ -10,13 +10,15 @@
 #' @param x_axis optional vector with the values for the x-axis
 #' @param max_y optional maximum value for the y-axis
 #' @param silent parameter to suppress error messages during model evaluation
-#' @param lang language for output (en, fr, de or it)
+#' @param lang language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
-#'   timeseriesanalysis(accidents=example_timeserie)
-#'
-#'
-
+#'   timeseriesanalysis(accidents = example1_timeserie)
+#'   timeseriesanalysis(accidents = example2_timeserie, lang = "de")
+#'   test <- timeseriesanalysis(accidents = example2_timeserie, lang = "it")
+#'   print(test)
+#'   # plot(test)
+#'   summary(test)
 
 timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until = NULL, show_outliers = TRUE,
                                pearson_line = TRUE, main = NULL, max_y = NULL, x_axis = NULL, v = 1, silent = TRUE,
@@ -270,7 +272,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     trend <- "trend"
     rise <- "annual increase of"
     fall <- "annual decrease of"
-    model <- "Modell"
+    model <- "model"
   }
   if (object$lang == "de"){
     reliability <- c("nicht verlaesslich, keine Wirkung", "stark verlaesslich", "gut verlaesslich", "schwach verlaesslich")
@@ -284,7 +286,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     trend <- "Tendance"
     rise <- "augmentation annuelle de"
     fall <- "diminution annuelle de"
-    model <- ""
+    model <- "model"
   }
   if (object$lang == "it"){
     reliability <- c("non affidabile, nessun effett", "altamente affidabile", "altamente affidabile",
@@ -292,7 +294,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     trend <- "Tendenza"
     rise <- "aumento annuo del"
     fall <- "decremento annuo del"
-    model <- ""
+    model <- "modello"
   }
   direction <- ifelse(object$trend >= 0, rise, fall)
   if(is.na(object$p_value_trend))

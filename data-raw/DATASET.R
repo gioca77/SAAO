@@ -32,10 +32,16 @@ zeit_sim <- function(n, mu, beta = 1, disp = 0, start = 2000){
 }
 
 set.seed(1)
-example_timeserie <- zeit_sim(n=12, mu=12, beta=1.01, disp=0.5)
+example1_timeserie <- zeit_sim(n=12, mu=12, beta=1.01, disp=1)
 
 
-usethis::use_data(example_timeserie, overwrite = TRUE)
+usethis::use_data(example1_timeserie, overwrite = TRUE)
+
+example2_timeserie <- zeit_sim(n=10, mu=25, beta=0.91, disp=0)
+
+usethis::use_data(example2_timeserie, overwrite = TRUE)
+
+
 
 ### Funktion fuer Generieren von Zeitreihen mit Massnahmen-/Trendeffekt
 

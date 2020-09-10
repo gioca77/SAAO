@@ -1,7 +1,7 @@
 #' Function to determine the prediction interval for new value in time series
 #'
-#' @param accidents Vector with accident data
-#' @param exposition Dataframe with Expositionsdata (DTV) DEFAULT NULL
+#' @param accidents vector with accident data. The following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
+#' @param exposition optinal Dataframe with expositions data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
 #' @param n number of simulations
 #' @param conf.level level of the prediction interval
 #' @param from From which date or year (1.1) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
@@ -10,7 +10,7 @@
 #' @param x_axis optional vector with the values for the x-axis
 #' @param max_y optional maximum value for the y-axis
 #' @param silent parameter to suppress error messages during model evaluation
-#' @param lang language for output (en, fr, de or it)
+#' @param lang language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
 #'   # example
