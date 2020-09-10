@@ -22,7 +22,6 @@
 #' @export summary.class_effectiveness
 #' @export
 #' @examples
-#'   # example
 #'   ex1 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
 #'   print(ex1)
 #'   plot(ex1)
