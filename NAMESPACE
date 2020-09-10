@@ -2,4 +2,11 @@
 
 export(earlywarning)
 export(effectiveness)
+export(plot.class_effectiveness)
+export(plot.class_timeseriesanalyis)
+export(plot_ci)
+export(print.class_effectiveness)
+export(print.class_timeseriesanalyis)
+export(summary.class_effectiveness)
+export(summary.class_timeseriesanalyis)
 export(timeseriesanalysis)

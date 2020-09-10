@@ -93,7 +93,6 @@ zeit_massnahme_sim <- function(n = 10, massnahme = n-4,
       lines(1:massnahme, mu_vorher, col = 2)
       lines((massnahme+1):n, mu_nachher, col = 3)
 
-      return(unfall_data)
     }
     else if (!is.null(mu_2) & !is.null(beta_2)) {
       unfall_data <- data.frame(Jahr = 1:n,
@@ -108,7 +107,6 @@ zeit_massnahme_sim <- function(n = 10, massnahme = n-4,
       lines(1:massnahme, mu_vorher, col = 2)
       lines((massnahme+1):n, mu_nachher, col = 3)
 
-      return(unfall_data)
     }
     else if (is.null(mu_2) & !is.null(beta_2)){
       unfall_data <- data.frame(Jahr = 1:n,
@@ -123,8 +121,6 @@ zeit_massnahme_sim <- function(n = 10, massnahme = n-4,
            ylim = c(0, max(unfall_data$Unfaelle)))
       lines(1:massnahme, mu_vorher, col = 2)
       lines((massnahme+1):n, mu_nachher, col = 3)
-
-      return(unfall_data)
     }
     else {
       print("Ungueltige Eingabe")
@@ -210,3 +206,28 @@ example_no_effect <- zeit_massnahme_sim(n = 10, massnahme = 6,
                                         disp = 0, start=2005)
 
 usethis::use_data(example_no_effect, overwrite = TRUE)
+
+set.seed(5)
+example_measure_effect <- zeit_massnahme_sim(n = 12, massnahme = 8,
+                                        mu = 18, mu_2 = 10,
+                                        beta = 1, beta_2 = NULL,
+                                        disp = 1.1, start=2005)
+
+usethis::use_data(example_measure_effect, overwrite = TRUE)
+
+set.seed(3)
+example_measure_effect_and_trend <- zeit_massnahme_sim(n = 12, massnahme = 8,
+                                             mu = 18, mu_2 = 5,
+                                             beta = 1.2, beta_2 = 0.9,
+                                             disp = 0, start=2003)
+
+usethis::use_data(example_measure_effect_and_trend, overwrite = TRUE)
+
+
+exposition_ex1 <- data.frame(start=c("01.01.2005", "09.10.2009", "01.06.2012", "01.10.2012"),  DTV=c(1000, 1200, 500, 2000))
+usethis::use_data(exposition_ex1, overwrite = TRUE)
+exposition_ex2 <- data.frame(year=c(2005:2020), DTV=seq(1000,2500, 100))
+usethis::use_data(exposition_ex2, overwrite = TRUE)
+exposition_ex3 <- data.frame(year=c(2005, 2010), DTV=c(1000,1500))
+usethis::use_data(exposition_ex3, overwrite = TRUE)
+

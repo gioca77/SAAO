@@ -1,5 +1,6 @@
 #' Function to evaluate the effectiveness of measures
 #'
+#' @details
 #' Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the #' measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. #' However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched #' to a Negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: #' no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best
 #' model is displayed. The exposure can optionally be considered as an offset.
 #'
@@ -16,14 +17,20 @@
 #' @param KI_plot TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)
 #' @param silent parameter to suppress error messages during model evaluation
 #' @param lang language for output ("en", "fr", "de" or "it")
+#' @export plot.class_effectiveness
+#' @export print.class_effectiveness
+#' @export summary.class_effectiveness
 #' @export
 #' @examples
 #'   # example
 #'   ex1 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
 #'   print(ex1)
-#'   # plot(ex1)
-#'   # plot_ci(ex1)
-#'   # summary(ex1)
+#'   plot(ex1)
+#'   plot_ci(ex1)
+#'   summary(ex1)
+#'   ex2 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
+#'   ex3 <- effectiveness(accidents = example_measure_effect_and_trend , measure_start = '1.1.2011', measure_end = '1.1.2011')
+#'   ex4 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1)
 #'
 effectiveness <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL, until = NULL, main = NULL, x_axis = NULL, y_axis = NULL, max_y = NULL, KI_plot = TRUE, silent = TRUE, lang = "en"){
   ## check mandatory input
@@ -423,11 +430,10 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       ggplot2::geom_segment(ggplot2::aes(x = 0.99, y = d, xend = 1.01, yend = d), colour = "red", size=2)+
       ggplot2::theme(axis.ticks.y=ggplot2::element_blank(),
             axis.text.y=ggplot2::element_blank())
-    output <- list(fit = fit, modelname=modelname, data = rbind(expect_before, expect_after),  pvalue_measure= pvalue_measure, pvalue_trend=pvalue_trend,  pvalue_interaction= pvalue_interaction, plot=p, plot_KI = p2, lang = lang)
-    class(output) <- "class_effectiveness"
-    return(output)
   }
-  output <- list(fit = fit, modelname=modelname, data = rbind(expect_before, expect_after),  pvalue_measure= pvalue_measure, pvalue_trend=pvalue_trend,  pvalue_interaction= pvalue_interaction, plot=p, lang = lang)
+  if (!KI_plot) p2 = NULL
+  output <- list(fit = fit, modelname=modelname, data = rbind(expect_before, expect_after),  pvalue_measure= pvalue_measure, pvalue_trend=pvalue_trend,  pvalue_interaction= pvalue_interaction,
+                 test_overdisp = test_overdisp, plot_KI = p2,  plot=p, lang = lang)
   class(output) <- "class_effectiveness"
   return(output)
 }
@@ -491,20 +497,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   print(object$plot)
 }
 
-#' Function to directly plot confidence interval of measure
-#'
-#' @param object output of effectiveness-Function
 
-plot_ci <- function(object)
-{
-  if (!inherits(object, "class_effectiveness"))
-  {
-    stop("Not a effectiveness object")
-  }
-  if(!is.null(object$plot_KI)){
-    print(object$plot_KI)
-  } else {print("no confidence interval plot available")}
-}
 
 "summary.class_effectiveness" <- function(object)
 {
@@ -514,7 +507,7 @@ plot_ci <- function(object)
   }
   sum_output <- list(model = object$fit, modelname=object$modelname, data = object$data,
                      p_value_measure = object$pvalue_measure, p_value_trend = object$pvalue_trend,
-                     p_value_interaction = object$pvalue_interaction)
+                     p_value_interaction = object$pvalue_interaction, p_value_test_overdispersion = object$test_overdisp)
   sum_output
 }
 

@@ -52,4 +52,8 @@ Function to evaluate the trend in accident time series
   print(test)
   # plot(test)
   summary(test)
+  timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex1)
+  timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex2)
+  test2 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex3)
+  summary(test2)
 }

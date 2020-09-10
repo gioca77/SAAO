@@ -11,14 +11,21 @@
 #' @param max_y optional maximum value for the y-axis
 #' @param silent parameter to suppress error messages during model evaluation
 #' @param lang language for output ("en", "fr", "de" or "it")
+#' @export plot.class_timeseriesanalyis
+#' @export print.class_timeseriesanalyis
+#' @export summary.class_timeseriesanalyis
 #' @export
 #' @examples
 #'   timeseriesanalysis(accidents = example1_timeserie)
 #'   timeseriesanalysis(accidents = example2_timeserie, lang = "de")
 #'   test <- timeseriesanalysis(accidents = example2_timeserie, lang = "it")
 #'   print(test)
-#'   # plot(test)
+#'   plot(test)
 #'   summary(test)
+#'   timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex1)
+#'   timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex2)
+#'   test2 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex3)
+#'   summary(test2)
 
 timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until = NULL, show_outliers = TRUE,
                                pearson_line = TRUE, main = NULL, max_y = NULL, x_axis = NULL, v = 1, silent = TRUE,
@@ -275,7 +282,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     model <- "model"
   }
   if (object$lang == "de"){
-    reliability <- c("nicht verlaesslich, keine Wirkung", "stark verlaesslich", "gut verlaesslich", "schwach verlaesslich")
+    reliability <- c("nicht verlaesslich, keine Wirkung nachgewiesen", "stark verlaesslich", "gut verlaesslich", "schwach verlaesslich")
     trend <- "Trend"
     rise <- "jaehrlicher Anstieg von"
     fall <- "jaehrlicher Abnahme von"
@@ -333,7 +340,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   {
     stop("Not a timeseriesanalyis object")
   }
-  sum_output <- list(model = object$fit, data = object$data, trend = object$trend, p_value_trend = object$p_value_trend,
+  sum_output <- list(model = object$fit, data = object$data, trend_percent_change_per_year = object$trend, trend_muliplicator_per_year =1+object$trend, p_value_trend = object$p_value_trend,
              p_value_test_overdispersion = object$test_overdisp)
   sum_output
 }

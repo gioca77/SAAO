@@ -48,6 +48,9 @@ effectiveness(
 \item{lang}{language for output ("en", "fr", "de" or "it")}
 }
 \description{
+Function to evaluate the effectiveness of measures
+}
+\details{
 Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the #' measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. #' However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched #' to a Negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: #' no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best
 model is displayed. The exposure can optionally be considered as an offset.
 }
@@ -58,5 +61,8 @@ model is displayed. The exposure can optionally be considered as an offset.
   # plot(ex1)
   # plot_ci(ex1)
   # summary(ex1)
+  ex2 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
+  ex3 <- effectiveness(accidents = example_measure_effect_and_trend , measure_start = '1.1.2011', measure_end = '1.1.2011')
+  ex4 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1)
 
 }
