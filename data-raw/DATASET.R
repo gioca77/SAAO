@@ -31,15 +31,29 @@ zeit_sim <- function(n, mu, beta = 1, disp = 0, start = 2000){
   return(dat)
 }
 
+# Warnung mit Overdispersion
 set.seed(1)
 example1_timeserie <- zeit_sim(n=12, mu=12, beta=1.01, disp=1)
 
-
 usethis::use_data(example1_timeserie, overwrite = TRUE)
 
+# keine Warnung ohne Overdispersion
+set.seed(1)
 example2_timeserie <- zeit_sim(n=10, mu=25, beta=0.91, disp=0)
 
 usethis::use_data(example2_timeserie, overwrite = TRUE)
+
+# Warnung ohne Overdispersion
+set.seed(11)
+example3_timeserie <- zeit_sim(n=8, mu=13, beta=0.98, disp=0)
+
+usethis::use_data(example3_timeserie, overwrite = TRUE)
+
+# keine Warnung mit Overdispersion
+set.seed(2)
+example4_timeserie <- zeit_sim(n=14, mu=8, beta=1.02, disp=20)
+
+usethis::use_data(example4_timeserie, overwrite = TRUE)
 
 
 
@@ -199,7 +213,7 @@ zeit_massnahme_sim <- function(n = 10, massnahme = n-4,
   return(dat)
 }
 
-set.seed(7)
+set.seed(7) # Massnahme 2011.01.01
 example_no_effect <- zeit_massnahme_sim(n = 10, massnahme = 6,
                                         mu = 15, mu_2 = NULL,
                                         beta = 1, beta_2 = NULL,
@@ -207,7 +221,7 @@ example_no_effect <- zeit_massnahme_sim(n = 10, massnahme = 6,
 
 usethis::use_data(example_no_effect, overwrite = TRUE)
 
-set.seed(5)
+set.seed(5) # Massnahme 2012.01.01
 example_measure_effect <- zeit_massnahme_sim(n = 12, massnahme = 8,
                                         mu = 18, mu_2 = 10,
                                         beta = 1, beta_2 = NULL,
@@ -215,13 +229,37 @@ example_measure_effect <- zeit_massnahme_sim(n = 12, massnahme = 8,
 
 usethis::use_data(example_measure_effect, overwrite = TRUE)
 
-set.seed(3)
-example_measure_effect_and_trend <- zeit_massnahme_sim(n = 12, massnahme = 8,
+set.seed(3) # Massnahme 2010.01.01
+example_measure_and_trend_effect <- zeit_massnahme_sim(n = 12, massnahme = 8,
                                              mu = 18, mu_2 = 5,
                                              beta = 1.2, beta_2 = 0.9,
                                              disp = 0, start=2003)
 
+usethis::use_data(example_measure_and_trend_effect, overwrite = TRUE)
+
+set.seed(3) # Massnahme 2012.01.01
+example_measure_effect_and_trend <- zeit_massnahme_sim(n = 14, massnahme = 9,
+                                                       mu = 20, mu_2 = 9,
+                                                       beta = 1.1, beta_2 = NULL,
+                                                       disp = 0, start=2003)
+
 usethis::use_data(example_measure_effect_and_trend, overwrite = TRUE)
+
+set.seed(10) # Massnahme 2013.01.01
+example_trend <- zeit_massnahme_sim(n = 10, massnahme = 6,
+                                    mu = 15, mu_2 = NULL,
+                                    beta = 1.075, beta_2 = NULL,
+                                    disp = 0, start=2007)
+
+usethis::use_data(example_trend, overwrite = TRUE)
+
+set.seed(2) # Massnahme 2011.01.01
+example_trend_effect <- zeit_massnahme_sim(n = 16, massnahme = 10,
+                                           mu = 20, mu_2 = NULL,
+                                           beta = 1.05, beta_2 = 0.9,
+                                           disp = 10, start=2001)
+
+usethis::use_data(example_trend_effect, overwrite = TRUE)
 
 
 exposition_ex1 <- data.frame(start=c("01.01.2005", "09.10.2009", "01.06.2012", "01.10.2012"),  DTV=c(1000, 1200, 500, 2000))

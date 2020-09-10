@@ -9,28 +9,27 @@ timeseriesanalysis(
   exposition = NULL,
   from = NULL,
   until = NULL,
-  show_outliers = TRUE,
   pearson_line = TRUE,
+  show_outliers = FALSE,
   main = NULL,
   max_y = NULL,
   x_axis = NULL,
-  v = 1,
   silent = TRUE,
   lang = "en"
 )
 }
 \arguments{
-\item{accidents}{vector with accident data. The following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
+\item{accidents}{either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
 
-\item{exposition}{optinal Dataframe with expositions data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
+\item{exposition}{optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
 
-\item{from}{From which date or year (1.1) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
+\item{from}{from which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
 
 \item{until}{Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
 
-\item{show_outliers}{TRUE/FALSE if outliers with Pearson residual greater than 2 should be visualized in color}
+\item{pearson_line}{TRUE/FALSE if line for pearson residual equal 2 should be drawn or not}
 
-\item{pearson_line}{if line for pearson residual equal 2 should be drawn or not}
+\item{show_outliers}{FALSE/TRUE if outliers with Pearson residual greater than 2 should be highlighted in color}
 
 \item{main}{optional title for the plot}
 
@@ -46,14 +45,23 @@ timeseriesanalysis(
 Function to evaluate the trend in accident time series
 }
 \examples{
-  timeseriesanalysis(accidents = example1_timeserie)
-  timeseriesanalysis(accidents = example2_timeserie, lang = "de")
-  test <- timeseriesanalysis(accidents = example2_timeserie, lang = "it")
-  print(test)
-  plot(test)
-  summary(test)
-  timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex1)
-  timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex2)
-  test2 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex3)
-  summary(test2)
+  ex1 <- timeseriesanalysis(accidents = example1_timeserie)
+  print(ex1)
+  plot(ex1)
+  summary(ex1)
+  summary(ex1$fit)
+  ex2 <- timeseriesanalysis(accidents = example2_timeserie, lang = "de")
+  ex2
+  ex3 <- timeseriesanalysis(accidents = example3_timeserie, lang = "it")
+  print(ex3)
+  ex4 <- timeseriesanalysis(accidents = example4_timeserie, lang = "de")
+  print(ex4)
+  plot(ex4)
+  summary(ex4)
+  ex5 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex1)
+  plot(ex5)
+  ex6 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex2)
+  print(ex6)
+  ex7 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex3)
+  summary(ex7)
 }

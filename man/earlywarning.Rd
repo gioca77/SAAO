@@ -7,30 +7,29 @@
 earlywarning(
   accidents,
   exposition = NULL,
-  n = 1000,
-  conf.level = 0.9,
   from = NULL,
   until = NULL,
+  n = 1000,
+  conf.level = 0.9,
   main = NULL,
   silent = TRUE,
   x_axis = NULL,
   max_y = NULL,
-  lang = "en",
-  v = 1
+  lang = "en"
 )
 }
 \arguments{
-\item{accidents}{vector with accident data. The following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
+\item{accidents}{either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
 
-\item{exposition}{optinal Dataframe with expositions data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
+\item{exposition}{optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
+
+\item{from}{from which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
+
+\item{until}{Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
 
 \item{n}{number of simulations}
 
 \item{conf.level}{level of the prediction interval}
-
-\item{from}{From which date or year (1.1) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
-
-\item{until}{Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
 
 \item{main}{optional title for the plot}
 
@@ -46,6 +45,23 @@ earlywarning(
 Function to determine the prediction interval for new value in time series
 }
 \examples{
-  # example
-  earlywarning(accidents=example_timeserie)
+  ex1 <- earlywarning(accidents = example1_timeserie)
+  print(ex1)
+  plot(ex1)
+  summary(ex1)
+  summary(ex1$fit)
+  ex2 <- earlywarning(accidents = example2_timeserie, lang = "de")
+  ex2
+  ex3 <- earlywarning(accidents = example3_timeserie, lang = "it")
+  print(ex3)
+  ex4 <- earlywarning(accidents = example4_timeserie, lang = "de")
+  print(ex4)
+  plot(ex4)
+  summary(ex4)
+  ex5 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex1)
+  plot(ex5)
+  ex6 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex2)
+  print(ex6)
+  ex7 <- earlywarning(accidents = example3_timeserie, exposition=exposition_ex3)
+  summary(ex7)
 }

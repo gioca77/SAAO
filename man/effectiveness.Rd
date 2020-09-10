@@ -21,23 +21,21 @@ effectiveness(
 )
 }
 \arguments{
-\item{accidents}{vector with accident data. The following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
+\item{accidents}{either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
 
-\item{measure_start}{Start of the implementation of measures (format '2014-04-22', '2014/04/22' respectively '22.4.2014')}
+\item{measure_start}{at which data the implementation of measure started (e.g. character '22.4.2014' or R date/time)}
 
-\item{measure_end}{End of measure implementation respectively first day after the measure (format '2014-04-22', '2014/04/22' respectively '22.4.2014')}
+\item{measure_end}{at which data the implementation of the measure was finished (respectively first day after the measure)}
 
-\item{exposition}{optinal Dataframe with expositions data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
+\item{exposition}{optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
 
-\item{from}{From which date or year (1.1) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
+\item{from}{from which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
 
 \item{until}{Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
 
 \item{main}{optional title for the plot}
 
 \item{x_axis}{optional vector with the values for the x-axis}
-
-\item{y_axis}{optional vector with the values for the y-axis}
 
 \item{max_y}{optional maximum value for the y-axis}
 
@@ -60,8 +58,17 @@ model is displayed. The exposure can optionally be considered as an offset.
   plot(ex1)
   plot_ci(ex1)
   summary(ex1)
-  ex2 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
-  ex3 <- effectiveness(accidents = example_measure_effect_and_trend , measure_start = '1.1.2011', measure_end = '1.1.2011')
-  ex4 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1)
-
+  ex2 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2012', measure_end = '1.1.2012')
+  ex2
+  ex3 <- effectiveness(accidents = example_measure_and_trend_effect, measure_start = '2010-01-01', measure_end = '2010-1-1')
+  plot(ex3)
+  ex4 <- effectiveness(accidents = example_measure_effect_and_trend, measure_start = '2012/01/01', measure_end = '2012/1/1')
+  ex4
+  ex5 <- effectiveness(accidents = example_trend, measure_start = '1.1.2013', measure_end = '1.1.2013')
+  print(ex5)
+  ex6 <- effectiveness(accidents = example_trend_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
+  print(ex6)
+  ex7 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1, lang = "de")
+  summary(ex7)
+  plot(ex7)
 }

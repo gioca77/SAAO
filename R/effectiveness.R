@@ -4,16 +4,17 @@
 #' Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the #' measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. #' However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched #' to a Negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: #' no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best
 #' model is displayed. The exposure can optionally be considered as an offset.
 #'
-#' @param accidents vector with accident data. The following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
-#' @param measure_start Start of the implementation of measures (format '2014-04-22', '2014/04/22' respectively '22.4.2014')
-#' @param measure_end End of measure implementation respectively first day after the measure (format '2014-04-22', '2014/04/22' respectively '22.4.2014')
-#' @param exposition optinal Dataframe with expositions data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
-#' @param from From which date or year (1.1) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
+#' @param accidents either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
+#' @param measure_start at which data the implementation of measure started (e.g. character '22.4.2014' or R date/time)
+#' @param measure_end at which data the implementation of the measure was finished (respectively first day after the measure)
+#' @param exposition optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
+#' @param from from which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
 #' @param main optional title for the plot
 #' @param x_axis optional vector with the values for the x-axis
-#' @param y_axis optional vector with the values for the y-axis
 #' @param max_y optional maximum value for the y-axis
+#' @param silent parameter to suppress error messages during model evaluation
+#' @param lang language for output ("en", "fr", "de" or "it")
 #' @param KI_plot TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)
 #' @param silent parameter to suppress error messages during model evaluation
 #' @param lang language for output ("en", "fr", "de" or "it")
@@ -27,10 +28,23 @@
 #'   plot(ex1)
 #'   plot_ci(ex1)
 #'   summary(ex1)
-#'   ex2 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
-#'   ex3 <- effectiveness(accidents = example_measure_effect_and_trend , measure_start = '1.1.2011', measure_end = '1.1.2011')
-#'   ex4 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1)
-#'
+#'   ex2 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2012', measure_end = '1.1.2012')
+#'   ex2
+#'   ex3 <- effectiveness(accidents = example_measure_and_trend_effect, measure_start = '2010-01-01', measure_end = '2010-1-1')
+#'   plot(ex3)
+#'   ex4 <- effectiveness(accidents = example_measure_effect_and_trend, measure_start = '2012/01/01', measure_end = '2012/1/1')
+#'   ex4
+#'   ex5 <- effectiveness(accidents = example_trend, measure_start = '1.1.2013', measure_end = '1.1.2013')
+#'   print(ex5)
+#'   ex6 <- effectiveness(accidents = example_trend_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
+#'   print(ex6)
+#'   ex7 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1, lang = "de")
+#'   summary(ex7)
+#'   plot(ex7)
+
+
+
+
 effectiveness <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL, until = NULL, main = NULL, x_axis = NULL, y_axis = NULL, max_y = NULL, KI_plot = TRUE, silent = TRUE, lang = "en"){
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
@@ -445,25 +459,25 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   modelname <- c("measure and trend effect", "trend effect", "measure effect and trend",
                "measure effect", "trend", "no effect")
-  reliability <- c("not reliable, no effect", "highly reliable", "well reliable", "weakly reliable")
+  reliability <- c("not reliable, no effect proven", "highly reliable", "well reliable", "weakly reliable")
   measure <- "Effect of measures"
   min_model <- which(object$modelname==modelname)
   if (object$lang == "de"){
     modelname <- c("Massnahmen- und Trendeffekt", "Trendeffekt", "Massnahmeneffekt and Trend",
                    "Massnahmeneffekt", "Trend", "kein Effekt")
-    reliability <- c("nicht verlaesslich, keine Wirkung", "stark verlaesslich", "gut verlaesslich", "schwach verlaesslich")
+    reliability <- c("nicht verlaesslich, keine Wirkung nachgewiesen", "stark verlaesslich", "gut verlaesslich", "schwach verlaesslich")
     measure <- "Massnahmeneffekt"
   }
   if (object$lang == "fr"){
     modelname <- c("Effet des mesures et de la tendance", "Effet de tendance", "Effet des mesures et tendance",
                    "Effet des mesures", "Tendance", "aucun effet")
-    reliability <- c("pas fiable, pas d'effet", "tres fiable", "assez fiable", "faiblement fiable")
+    reliability <- c("pas fiable, pas d'effet prouve", "tres fiable", "assez fiable", "faiblement fiable")
     measure <- "Effet des mesures"
   }
   if (object$lang == "it"){
      modelname <- c("Misure ed effetto tendenza", "Effetto tendenza", "Effetto delle misure ed tendenza",
                     "Effetto delle misure", "Tendenza", "nessun effett")
-     reliability <- c("non affidabile, nessun effett", "altamente affidabile", "altamente affidabile",
+     reliability <- c("non affidabile, nessun effett provato", "altamente affidabile", "altamente affidabile",
                       "debolmente affidabile")
      measure <- "Effetto delle misure"
   }
