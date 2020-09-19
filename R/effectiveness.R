@@ -18,9 +18,6 @@
 #' @param KI_plot TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)
 #' @param silent parameter to suppress error messages during model evaluation
 #' @param lang language for output ("en", "fr", "de" or "it")
-#' @export plot.class_effectiveness
-#' @export print.class_effectiveness
-#' @export summary.class_effectiveness
 #' @export
 #' @examples
 #'   ex1 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
@@ -41,8 +38,6 @@
 #'   ex7 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1, lang = "de")
 #'   summary(ex7)
 #'   plot(ex7)
-
-
 
 
 effectiveness <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL, until = NULL, main = NULL, x_axis = NULL, y_axis = NULL, max_y = NULL, KI_plot = TRUE, silent = TRUE, lang = "en"){
@@ -451,6 +446,11 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   return(output)
 }
 
+#' Function to print class effectiveness
+#'
+#' @method print class_effectiveness
+#' @export
+
 "print.class_effectiveness" <- function(object)
 {
   if (!inherits(object, "class_effectiveness"))
@@ -458,7 +458,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     stop("Not a effectiveness object")
   }
   modelname <- c("measure and trend effect", "trend effect", "measure effect and trend",
-               "measure effect", "trend", "no effect")
+                 "measure effect", "trend", "no effect")
   reliability <- c("not reliable, no effect proven", "highly reliable", "well reliable", "weakly reliable")
   measure <- "Effect of measures"
   min_model <- which(object$modelname==modelname)
@@ -475,11 +475,11 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     measure <- "Effet des mesures"
   }
   if (object$lang == "it"){
-     modelname <- c("Misure ed effetto tendenza", "Effetto tendenza", "Effetto delle misure ed tendenza",
-                    "Effetto delle misure", "Tendenza", "nessun effett")
-     reliability <- c("non affidabile, nessun effett provato", "altamente affidabile", "altamente affidabile",
-                      "debolmente affidabile")
-     measure <- "Effetto delle misure"
+    modelname <- c("Misure ed effetto tendenza", "Effetto tendenza", "Effetto delle misure ed tendenza",
+                   "Effetto delle misure", "Tendenza", "nessun effett")
+    reliability <- c("non affidabile, nessun effett provato", "altamente affidabile", "altamente affidabile",
+                     "debolmente affidabile")
+    measure <- "Effetto delle misure"
   }
   if(is.na(object$pvalue_measure))
   {
@@ -500,6 +500,10 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   if (!(min_model==1 & !is.na(object$pvalue_interaction))) cat("\n", paste0(measure,": ", reliability[k]))
 }
 
+#' Function to plot class effectiveness
+#'
+#' @method plot class_effectiveness
+#' @export
 
 "plot.class_effectiveness" <- function(object)
 {
@@ -510,6 +514,10 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   print(object$plot)
 }
 
+#' Function for summary of class effectiveness
+#'
+#' @method summary class_effectiveness
+#' @export
 
 
 "summary.class_effectiveness" <- function(object)
@@ -523,5 +531,3 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
                      p_value_interaction = object$pvalue_interaction, p_value_test_overdispersion = object$test_overdisp)
   sum_output
 }
-
-

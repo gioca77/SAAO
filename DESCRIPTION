@@ -14,10 +14,9 @@ Imports:
     ArgumentCheck (>= 0.10.2),
     ggplot2,
     MASS (>= 7.3.51.6),
-	scales (>= 1.1.1),
-	stats,
 	methods,
-	performance
+	scales (>= 1.1.1),
+	stats
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

@@ -11,9 +11,6 @@
 #' @param max_y optional maximum value for the y-axis
 #' @param silent parameter to suppress error messages during model evaluation
 #' @param lang language for output ("en", "fr", "de" or "it")
-#' @export plot.class_earlywarning
-#' @export print.class_earlywarning
-#' @export summary.class_earlywarning
 #' @export
 #' @examples
 #'   ex1 <- earlywarning(accidents = example1_timeserie)
@@ -254,6 +251,10 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   return(output)
 }
 
+
+#' @method print class_earlywarning
+#' @export
+
 "print.class_earlywarning" <- function(object)
 {
   if (!inherits(object, "class_earlywarning"))
@@ -321,8 +322,12 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
 
 
 
+#' @method plot class_earlywarning
+#' @export
+
 "plot.class_earlywarning" <- function(object)
 {
+  print("x")
   if (!inherits(object, "class_earlywarning"))
   {
     stop("Not a earlywarning object")
@@ -330,6 +335,8 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   print(object$plot)
 }
 
+#' @method summary class_earlywarning
+#' @export
 "summary.class_earlywarning" <- function(object)
 {
   if (!inherits(object, "class_earlywarning"))

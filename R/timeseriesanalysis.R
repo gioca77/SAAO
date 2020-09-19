@@ -11,9 +11,6 @@
 #' @param max_y optional maximum value for the y-axis
 #' @param silent parameter to suppress error messages during model evaluation
 #' @param lang language for output ("en", "fr", "de" or "it")
-#' @export plot.class_timeseriesanalyis
-#' @export print.class_timeseriesanalyis
-#' @export summary.class_timeseriesanalyis
 #' @export
 #' @examples
 #'   ex1 <- timeseriesanalysis(accidents = example1_timeserie)
@@ -261,6 +258,8 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   return(output)
 }
 
+#' @method plot class_timeseriesanalyis
+#' @export
 
 "print.class_timeseriesanalyis" <- function(object)
 {
@@ -337,6 +336,8 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
 }
 
 
+#' @method print class_timeseriesanalyis
+#' @export
 
 "plot.class_timeseriesanalyis" <- function(object)
 {
@@ -346,6 +347,9 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   }
   print(object$plot)
 }
+
+#' @method summary class_timeseriesanalyis
+#' @export
 
 "summary.class_timeseriesanalyis" <- function(object)
 {
