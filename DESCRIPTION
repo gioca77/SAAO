@@ -11,7 +11,6 @@ Description: The package offers simple, automated tools for the statistical
 	traffic measures on the accident occurrence.
 Depends: R (>= 3.6.1)
 Imports:
-    ArgumentCheck (>= 0.10.2),
     ggplot2,
     MASS (>= 7.3.51.6),
 	methods,

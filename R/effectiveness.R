@@ -46,9 +46,9 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   measure_start <- try(as.Date(measure_start, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
   measure_end <- try(as.Date(measure_end, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
   ## check optional input
-  if (!is.null(exposition)){
+  if (!is.null(exposition) & !is.null(dim(exposition))){
     if (dim(exposition)[2] >= 2){
-      colnames(exposition)[1:2] <- c("time", "DTV")
+      colnames(exposition)[1:2] <- c("time", "Exp")
       if (any(nchar(as.character(exposition$time))!=4)){
         exposition$time <- try(as.Date(exposition$time, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
       } else expostion$time <- try(as.numeric(exposition$time), silent = silent)
@@ -69,54 +69,59 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     warning("language unknown, set to english")
   }
 
-  Check <- ArgumentCheck::newArgCheck()
+  Check <- newArgCheck_sep()
   #* accidents format
   if (is(accidents)[1] ==  "try-error")
-    ArgumentCheck::addError(
+    addError_sep(
       msg = "'accidents' not in the right format",
       argcheck = Check
     )
   #* measure_start format
   if (is(measure_start)[1] ==  "try-error")
-    ArgumentCheck::addError(
+    addError_sep(
       msg = "'wrong time format for 'measure_start'",
       argcheck = Check
     )
   #* measure_end format
   if (is(measure_end)[1] ==  "try-error")
-    ArgumentCheck::addError(
+    addError_sep(
       msg = "'wrong time format for 'measure_end'",
       argcheck = Check
     )
   #* exposition format
-  if (!is.null(exposition)){
-    if (dim(exposition)[2] < 2)
-      ArgumentCheck::addError(
-        msg = "'wrong input for 'exposition'",
+  if (!is.null(exposition) & !is.null(dim(exposition))){
+    if (dim(exposition)[2]<2)
+      addError_sep(
+        msg = "wrong input for 'exposition'",
         argcheck = Check
       )
     #* exposition time format
-    if (is(exposition)[1] ==  "try-error")
-      ArgumentCheck::addError(
-        msg = "'wrong time format for 'exposition'",
+    if (is(exposition)[1]==  "try-error")
+      addError_sep(
+        msg = "wrong time format for 'exposition'",
         argcheck = Check
       )
   }
+  if (!is.null(exposition) & is.null(dim(exposition))){
+    addError_sep(
+      msg = "wrong input for 'exposition'",
+      argcheck = Check)
+  }
   #* from time format
   if (is(from)[1] ==  "try-error")
-    ArgumentCheck::addError(
+    addError_sep(
       msg = "'wrong time format for 'from'",
       argcheck = Check
     )
   #* until time format
   if (is(until)[1] ==  "try-error")
-    ArgumentCheck::addError(
+    addError_sep(
       msg = "'wrong time format for 'until'",
       argcheck = Check
     )
 
   #* Return errors and warnings (if any)
-  ArgumentCheck::finishArgCheck(Check)
+  finishArgCheck_sep(Check)
 
   ## processing input
   measure_mean <- as.Date(mean(c(as.numeric(measure_start),as.numeric(measure_end))), origin="1970-01-01")
@@ -144,31 +149,31 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
 
   ## add exposition to data
   if (!is.null(exposition)){
-    tab <- data.frame(Date=seq(from, until, 1), DTV=exposition$DTV[1])
+    tab <- data.frame(Date=seq(from, until, 1), Exp=exposition$Exp[1])
     if (is(exposition$time)[1]=="Date"){
       index <- match(tab$Date, exposition$time)
       if(length(index)>2){
         for (i in 2:(length(index)-1)){
-          tab$DTV[tab$Date>=exposition$time[i] & tab$Date<exposition$time[i+1]] <- exposition$DTV[i]
+          tab$Exp[tab$Date>=exposition$time[i] & tab$Date<exposition$time[i+1]] <- exposition$Exp[i]
         }
       }
-      tab$DTV[tab$Date>=exposition$time[length(index)]] <- exposition$DTV[length(index)]
+      tab$Exp[tab$Date>=exposition$time[length(index)]] <- exposition$Exp[length(index)]
     }
     if (is.numeric(exposition$time)){
       for (i in 1:length(exposition$time)){
-        tab$DTV[as.numeric(format(tab$Date, '%Y')) >= exposition$time[i]] <- exposition$DTV[i]
+        tab$Exp[as.numeric(format(tab$Date, '%Y')) >= exposition$time[i]] <- exposition$Exp[i]
       }
     }
-    dat_before$DTV <- NA
+    dat_before$Exp <- NA
     for (i in 1:(length(before)-1)){
-      dat_before$DTV[i] <- mean(tab$DTV[tab$Date >= before[i] & tab$Date < before[i+1]])
+      dat_before$Exp[i] <- mean(tab$Exp[tab$Date >= before[i] & tab$Date < before[i+1]])
     }
-    dat_after$DTV <- NA
+    dat_after$Exp <- NA
     for (i in 1:(length(after)-1)){
-      dat_after$DTV[i] <- mean(tab$DTV[tab$Date >= after[i] & tab$Date < after[i+1]])
+      dat_after$Exp[i] <- mean(tab$Exp[tab$Date >= after[i] & tab$Date < after[i+1]])
     }
   }
-  #  approx(x=exposition$time, y=exposition$DTV, xout=seq(from, until, 1))
+  #  approx(x=exposition$time, y=exposition$Exp, xout=seq(from, until, 1))
   dat_model <- rbind(dat_before, dat_after)
   during <- sum(accidents >= measure_start & accidents <= measure_end)
   measure_length <-  as.numeric(difftime(measure_end, measure_start, units="days")/365)
@@ -196,17 +201,17 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   if (!is.null(exposition)){
     ## model measure and trend effect
-    fit1 <- glm(accidents~Date*measure+offset(log(DTV)), data=dat_model, family = "poisson")
+    fit1 <- glm(accidents~Date*measure+offset(log(Exp)), data=dat_model, family = "poisson")
     ## model trend effect
-    fit2 <- glm(accidents~Date+I(pmax(0,Date-as.numeric(measure_mean)))+offset(log(DTV)), data=dat_model, family = "poisson")
+    fit2 <- glm(accidents~Date+I(pmax(0,Date-as.numeric(measure_mean)))+offset(log(Exp)), data=dat_model, family = "poisson")
     ## model measure effect and trend
-    fit3 <- glm(accidents~Date+measure+offset(log(DTV)), data=dat_model, family = "poisson")
+    fit3 <- glm(accidents~Date+measure+offset(log(Exp)), data=dat_model, family = "poisson")
     ## model measure effect
-    fit4 <- glm(accidents~measure+offset(log(DTV)), data=dat_model, family = "poisson")
+    fit4 <- glm(accidents~measure+offset(log(Exp)), data=dat_model, family = "poisson")
     ## model trend
-    fit5 <- glm(accidents~Date+offset(log(DTV)), data=dat_model, family = "poisson")
+    fit5 <- glm(accidents~Date+offset(log(Exp)), data=dat_model, family = "poisson")
     ## model no effect
-    fit6 <- glm(accidents~1+offset(log(DTV)), data=dat_model, family = "poisson")
+    fit6 <- glm(accidents~1+offset(log(Exp)), data=dat_model, family = "poisson")
     min_model <- try(max(which(c(fit1$aic, fit2$aic, fit3$aic, fit4$aic, fit5$aic, fit6$aic)==
                                  min(c(fit1$aic, fit2$aic, fit3$aic, fit4$aic, fit5$aic, fit6$aic), na.rm=TRUE))))
     if (is(min_model)[1]=="try-error" | length(min_model)==0 | min_model == -Inf)
@@ -243,8 +248,8 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     bef <- data.frame(measure=factor("before", levels=c("before", "after")), Date=measure_mean)
     aft <- data.frame(measure=factor("after", levels=c("before", "after")), Date=measure_mean)
     if (!is.null(exposition)){
-      bef$DTV <- dat_before$DTV[length(dat_before$DTV)]
-      aft$DTV <- dat_after$DTV[1]
+      bef$Exp <- dat_before$Exp[length(dat_before$Exp)]
+      aft$Exp <- dat_after$Exp[1]
     }
     preds_bef <- try(predict(fit, type="link", newdata = bef, se.fit = TRUE), silent=silent)
     preds_aft <- try(predict(fit, type="link", newdata = aft, se.fit = TRUE), silent=silent)
@@ -276,16 +281,16 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
                           data.frame(Date=after[length(after)], accidents=NA, measure=factor("after", levels=c("before", "after"))))
   }
   if (!is.null(exposition)){
-    before_bor <- data.frame(Date=before, measure=factor("before", levels=c("before", "after")), DTV=approx(x=dat_before$Date, y=dat_before$DTV, xout=before, rule=2 )$y)
-    after_bor <- data.frame(Date=after, measure=factor("after", levels=c("before", "after")), DTV=approx(x=dat_after$Date, y=dat_after$DTV, xout=after, rule=2 )$y)
+    before_bor <- data.frame(Date=before, measure=factor("before", levels=c("before", "after")), Exp=approx(x=dat_before$Date, y=dat_before$Exp, xout=before, rule=2 )$y)
+    after_bor <- data.frame(Date=after, measure=factor("after", levels=c("before", "after")), Exp=approx(x=dat_after$Date, y=dat_after$Exp, xout=after, rule=2 )$y)
     expect_before <- rbind(data.frame(Date=before[1], accidents=NA, measure=factor("before", levels=c("before", "after")),
-                                      DTV=approx(x=dat_before$Date, y=dat_before$DTV, xout=before[1], rule=2)$y),
+                                      Exp=approx(x=dat_before$Date, y=dat_before$Exp, xout=before[1], rule=2)$y),
                            dat_before, data.frame(Date=measure_start, accidents=NA, measure=factor("before", levels=c("before", "after")),
-                                                  DTV=approx(x=dat_before$Date, y=dat_before$DTV, xout=measure_start, rule=2)$y))
+                                                  Exp=approx(x=dat_before$Date, y=dat_before$Exp, xout=measure_start, rule=2)$y))
     expect_after <- rbind(data.frame(Date=measure_end, accidents=NA, measure=factor("after", levels=c("before", "after")),
-                                     DTV=approx(x=dat_after$Date, y=dat_after$DTV, xout=measure_end, rule=2)$y), dat_after,
+                                     Exp=approx(x=dat_after$Date, y=dat_after$Exp, xout=measure_end, rule=2)$y), dat_after,
                           data.frame(Date=after[length(after)], accidents=NA, measure=factor("after", levels=c("before", "after")),
-                                     DTV=approx(x=dat_after$Date, y=dat_after$DTV, xout=after[length(after)], rule=2)$y))
+                                     Exp=approx(x=dat_after$Date, y=dat_after$Exp, xout=after[length(after)], rule=2)$y))
   }
   ## Combine original data with the calculated data
   dat_model$rownames <- rownames(dat_model)
@@ -372,13 +377,13 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     }
   }
   if (!is.null(exposition)){
-    if (is.null(max_y)) max_y <- max(dat_total$expect/dat_total$DTV, dat_total$accidents/dat_total$DTV,
-                                     before_bor$upp/before_bor$DTV, after_bor$upp/after_bor$DTV, na.rm=TRUE)*1.1
+    if (is.null(max_y)) max_y <- max(dat_total$expect/dat_total$Exp, dat_total$accidents/dat_total$Exp,
+                                     before_bor$upp/before_bor$Exp, after_bor$upp/after_bor$Exp, na.rm=TRUE)*1.1
     scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
-    p <- ggplot2::ggplot(dat_total, ggplot2::aes(x=Date, y=accidents/DTV* scal)) +
+    p <- ggplot2::ggplot(dat_total, ggplot2::aes(x=Date, y=accidents/Exp* scal)) +
       ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=after_bor$Date, colour="darkgrey", linetype=2)+
-      ggplot2::geom_ribbon(data=rbind(expect_before, expect_after), ggplot2::aes(ymin=low/DTV* scal,ymax=upp/DTV* scal), fill="grey", alpha=0.5)+
+      ggplot2::geom_ribbon(data=rbind(expect_before, expect_after), ggplot2::aes(ymin=low/Exp* scal,ymax=upp/Exp* scal), fill="grey", alpha=0.5)+
       ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
       ggplot2::ylab(paste("accident rate *", formatC(scal, format = "e", digits = 0))) +
       ggplot2::ggtitle(main)+
@@ -387,28 +392,28 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     after_bor$accidents=NA
     for (z in seq(1, dim(before_bor)[1], 2)){
       p <- p +
-        ggplot2::geom_ribbon(data=before_bor[z:(z+1),], ggplot2::aes(ymin=low/DTV* scal,ymax=upp/DTV* scal), fill="darkgrey", alpha=0.5)
+        ggplot2::geom_ribbon(data=before_bor[z:(z+1),], ggplot2::aes(ymin=low/Exp* scal,ymax=upp/Exp* scal), fill="darkgrey", alpha=0.5)
     }
     for (z in seq(1, dim(after_bor)[1], 2)){
       p <- p +
-        ggplot2::geom_ribbon(data=after_bor[z:(z+1),], ggplot2::aes(ymin=low/DTV* scal,ymax=upp/DTV* scal), fill="darkgrey", alpha=0.5)
+        ggplot2::geom_ribbon(data=after_bor[z:(z+1),], ggplot2::aes(ymin=low/Exp* scal,ymax=upp/Exp* scal), fill="darkgrey", alpha=0.5)
     }
     p <- p +
       ggplot2::geom_point() +
-      ggplot2::geom_line(data=expect_before, ggplot2::aes(y=expect/DTV* scal, x=Date), col="blue", linetype = 1)+
-      ggplot2::geom_line(data=expect_after, ggplot2::aes(y=expect/DTV* scal, x=Date), col="blue", linetype = 1)+
+      ggplot2::geom_line(data=expect_before, ggplot2::aes(y=expect/Exp* scal, x=Date), col="blue", linetype = 1)+
+      ggplot2::geom_line(data=expect_after, ggplot2::aes(y=expect/Exp* scal, x=Date), col="blue", linetype = 1)+
       ggplot2::geom_segment(ggplot2::aes(x=expect_before$Date[dim(expect_before)[1]], xend=expect_after$Date[1],
-                       y=expect_before$expect[dim(expect_before)[1]]/expect_before$DTV[dim(expect_before)[1]]* scal,
-                       yend=expect_after$expect[1]/expect_after$DTV[1]* scal), col="blue", linetype  = 2)+
-      ggplot2::geom_line(data=dat_total[dat_total$Date<measure_mean,], ggplot2::aes(x=Date, y=accidents/DTV* scal)) +
+                       y=expect_before$expect[dim(expect_before)[1]]/expect_before$Exp[dim(expect_before)[1]]* scal,
+                       yend=expect_after$expect[1]/expect_after$Exp[1]* scal), col="blue", linetype  = 2)+
+      ggplot2::geom_line(data=dat_total[dat_total$Date<measure_mean,], ggplot2::aes(x=Date, y=accidents/Exp* scal)) +
       ggplot2::geom_vline(xintercept=measure_end, colour="red")+
       ggplot2::geom_vline(xintercept=measure_start, colour="red")+
-      ggplot2::geom_point(x=mean(c(measure_end, measure_start)), y=during/measure_length/tab$DTV[round(tab$Date)==round(measure_mean)]*scal, colour="grey", na.rm=TRUE)
+      ggplot2::geom_point(x=mean(c(measure_end, measure_start)), y=during/measure_length/tab$Exp[round(tab$Date)==round(measure_mean)]*scal, colour="grey", na.rm=TRUE)
 
     ## Connect the measured values after the measure, if there are enough measured values
     if (sum(dat_total$Date>measure_mean)>1){
       p <- p +
-        ggplot2::geom_line(data=dat_total[dat_total$Date>measure_mean,], ggplot2::aes(x=Date, y=accidents/DTV* scal))
+        ggplot2::geom_line(data=dat_total[dat_total$Date>measure_mean,], ggplot2::aes(x=Date, y=accidents/Exp* scal))
     }
     ## customization
     if (!is.null(y_axis)){

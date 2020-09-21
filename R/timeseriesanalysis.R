@@ -39,8 +39,8 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent=silent)
   ## check optional input
-  if (!is.null(exposition)){
-    if (dim(exposition)[2]>=2){
+  if (!is.null(exposition) & !is.null(dim(exposition))){
+    if (dim(exposition)[2]>=2 ){
       colnames(exposition)[1:2] <- c("time", "Exp")
       if (any(nchar(as.character(exposition$time))!=4)){
         exposition$time <- try(as.Date(exposition$time, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent=silent)
@@ -61,42 +61,47 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     lang <- "en"
     warning("language unknown, set to english")
   }
-  Check <- ArgumentCheck::newArgCheck()
+  Check <- newArgCheck_sep()
   #* accidents format
   if (is(accidents)[1]==  "try-error")
-    ArgumentCheck::addError(
+    addError_sep(
       msg = "'accidents' not in the right format",
       argcheck = Check
     )
   #* exposition format
-  if (!is.null(exposition)){
+  if (!is.null(exposition) & !is.null(dim(exposition))){
     if (dim(exposition)[2]<2)
-      ArgumentCheck::addError(
+      addError_sep(
         msg = "wrong input for 'exposition'",
         argcheck = Check
       )
     #* exposition time format
     if (is(exposition)[1]==  "try-error")
-      ArgumentCheck::addError(
+      addError_sep(
         msg = "wrong time format for 'exposition'",
         argcheck = Check
       )
   }
+  if (!is.null(exposition) & is.null(dim(exposition))){
+    addError_sep(
+      msg = "wrong input for 'exposition'",
+      argcheck = Check)
+  }
   #* from time format
   if (is(from)[1]==  "try-error")
-    ArgumentCheck::addError(
+    addError_sep(
       msg = "wrong time format for 'from'",
       argcheck = Check
     )
   #* until time format
   if (is(until)[1]==  "try-error")
-    ArgumentCheck::addError(
+    addError_sep(
       msg = "wrong time format for 'until'",
       argcheck = Check
     )
 
   #* Return errors and warnings (if any)
-  ArgumentCheck::finishArgCheck(Check)
+  finishArgCheck_sep(Check)
   ## processing input
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
