@@ -1,6 +1,6 @@
-Package: SAAO
+Package: STAAD
 Type: Package
-Title: Statistical Analysis of Accident Occurrences
+Title: Statistical Analysis of Accident Data
 Version: 0.1.0
 Authors@R: c(
     person("Martin", "Frey", email = "martin.frey@zhaw.ch", role = "cre"),

@@ -189,7 +189,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   }
   pred_new <- predict(fit, newdata=dat_model[dim(dat_model)[1], ], se.fit=TRUE, type="link")
   samp <- rnorm(n,  mean=pred_new$fit, sd=pred_new$se.fit)
-  samp <-truncnorm::rtruncnorm(n, a=0, b=Inf, mean = pred_new$fit, sd = pred_new$se.fit)
+  #samp <-truncnorm::rtruncnorm(n, a=0, b=Inf, mean = pred_new$fit, sd = pred_new$se.fit)
   if (!is.null(fit$theta))
   {
     y_int <- rnbinom(n, mu=exp(samp), size = summary(fit)$theta)
@@ -200,7 +200,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   }
   lp <- (1 - conf.level) / 2
   up <- 1 - lp
-  ci <- quantile(y_int, c(lp, up))
+  ci <- quantile(y_int, c(lp, up), na.rm=TRUE)
   dat_fit <- NULL
   preds <- predict(fit, type= "link", se.fit = TRUE)
   dat_fit <- data.frame(Date = fit$model$Date,
@@ -218,8 +218,16 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     if (lang == "it") main <- paste("Sistema di allarme rapido", from, "-", until, sep=" ")
   }
   if (is.null(exposition)){
-    if (is.null(max_y)) max_y <- max(max(dat_total[, c("accidents", "expect", "low", "upp"),], na.rm=TRUE),
+    if (is.null(max_y)) max_y <- max(max( c(dat_total$accidents[is.finite(dat_total$accidents)],
+                                            dat_total$expect[is.finite(dat_total$expect)],
+                                            dat_total$low[is.finite(dat_total$low)],
+                                            dat_total$upp[is.finite(dat_total$upp)]), na.rm=TRUE),
                             ci)*1.1
+    c(dat_total$accidents[is.finite(dat_total$accidents)],
+    dat_total$expect[is.finite(dat_total$expect)],
+    dat_total$low[is.finite(dat_total$low)],
+    dat_total$upp[is.finite(dat_total$upp)])
+
     p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
@@ -240,8 +248,17 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
   }
   if (!is.null(exposition)){
-    if (is.null(max_y)) max_y <- max(max(dat_total[, c("accidents", "expect", "low", "upp"),]/dat_total$Exp, na.rm=TRUE),
+    if (is.null(max_y)) max_y <- max(max(c(dat_total$accidents/dat_total$Exp[is.finite(dat_total$accidents/dat_total$Exp)],
+                                           dat_total$expect/dat_total$Exp[is.finite(dat_total$expect/dat_total$Exp)],
+                                           dat_total$low/dat_total$Exp[is.finite(dat_total$low/dat_total$Exp)],
+                                           dat_total$upp/dat_total$Exp[is.finite(dat_total$upp/dat_total$Exp)]), na.rm=TRUE),
                                      ci/dat_model$Exp[length(dat_model$Exp)])*1.1
+    max(max( c(dat_total$accidents/dat_total$Exp[is.finite(dat_total$accidents/dat_total$Exp)],
+               dat_total$expect/dat_total$Exp[is.finite(dat_total$expect/dat_total$Exp)],
+               dat_total$low/dat_total$Exp[is.finite(dat_total$low/dat_total$Exp)],
+               dat_total$upp/dat_total$Exp[is.finite(dat_total$upp/dat_total$Exp)]), na.rm=TRUE),
+        ci)*1.1
+
     scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
     p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents / Exp* scal)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
