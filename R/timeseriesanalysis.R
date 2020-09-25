@@ -226,11 +226,11 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   }
   # Base plot
   if (is.null(exposition)){
-    if (is.null(max_y)) max_y <- max(c(dat_total$accidents[is.finite(dat_total$accidents)],
-                                       dat_total$expect[is.finite(dat_total$expect)],
-                                       dat_total$low[is.finite(dat_total$low)],
-                                       dat_total$upp[is.finite(dat_total$upp)],
-                                       dat_total$pearson_line[is.finite(dat_total$pearson_line)]),
+    if (is.null(max_y)) max_y <- max(c(dat_model$accidents[is.finite(dat_model$accidents)],
+                                       dat_model$expect[is.finite(dat_model$expect)],
+                                       dat_model$low[is.finite(dat_model$low)],
+                                       dat_model$upp[is.finite(dat_model$upp)],
+                                       dat_model$pearson_line[is.finite(dat_model$pearson_line)]),
                                      na.rm=TRUE)*1.1
     p <- ggplot2::ggplot(dat_model,  ggplot2::aes(x=Date, y=accidents)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
@@ -249,11 +249,11 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
   }
   if (!is.null(exposition)){
-    if (is.null(max_y)) max_y <-  max(c(dat_total$accidents/dat_total$Exp[is.finite(dat_total$accidents/dat_total$Exp)],
-                                        dat_total$expect/dat_total$Exp[is.finite(dat_total$expect/dat_total$Exp)],
-                                        dat_total$low/dat_total$Exp[is.finite(dat_total$low/dat_total$Exp)],
-                                        dat_total$upp/dat_total$Exp[is.finite(dat_total$upp/dat_total$Exp)],
-                                        dat_total$pearson_line/dat_total$Exp[is.finite(dat_total$pearson_line/dat_total$Exp)]),
+    if (is.null(max_y)) max_y <-  max(c(dat_model$accidents/dat_model$Exp[is.finite(dat_model$accidents/dat_model$Exp)],
+                                        dat_model$expect/dat_model$Exp[is.finite(dat_model$expect/dat_model$Exp)],
+                                        dat_model$low/dat_model$Exp[is.finite(dat_model$low/dat_model$Exp)],
+                                        dat_model$upp/dat_model$Exp[is.finite(dat_model$upp/dat_model$Exp)],
+                                        dat_model$pearson_line/dat_model$Exp[is.finite(dat_model$pearson_line/dat_model$Exp)]),
                                       na.rm=TRUE)*1.1
     scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
     p <- ggplot2::ggplot(dat_model,  ggplot2::aes(x=Date, y=accidents/Exp* scal)) +
