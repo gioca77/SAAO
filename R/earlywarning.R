@@ -355,7 +355,6 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
 
 "plot.class_earlywarning" <- function(object)
 {
-  print("x")
   if (!inherits(object, "class_earlywarning"))
   {
     stop("Not a earlywarning object")

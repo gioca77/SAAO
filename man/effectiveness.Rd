@@ -57,7 +57,7 @@ model is displayed. The exposure can optionally be considered as an offset.
   summary(ex1)
   ex2 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2012', measure_end = '1.1.2012')
   ex2
-  ex3 <- effectiveness(accidents = example_measure_and_trend_effect, measure_start = '2010-01-01', measure_end = '2010-1-1')
+  ex3 <- effectiveness(accidents = example_measure_and_trend_effect, measure_start = '2011-01-01', measure_end = '2011-1-1')
   plot(ex3)
   ex4 <- effectiveness(accidents = example_measure_effect_and_trend, measure_start = '2012/01/01', measure_end = '2012/1/1')
   ex4
