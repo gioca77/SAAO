@@ -9,7 +9,6 @@
 #' @param main optional title for the plot
 #' @param x_axis optional vector with the values for the x-axis
 #' @param max_y optional maximum value for the y-axis
-#' @param silent parameter to suppress error messages during model evaluation
 #' @param lang language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
@@ -34,8 +33,8 @@
 #'   summary(ex7)
 
 timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until = NULL, pearson_line = TRUE, show_outliers = FALSE,
-                                main = NULL, max_y = NULL, x_axis = NULL, silent = TRUE,
-                               lang = "en"){
+                                main = NULL, max_y = NULL, x_axis = NULL, lang = "en"){
+  silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent=silent)
   ## check optional input
@@ -226,12 +225,10 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   }
   # Base plot
   if (is.null(exposition)){
-    if (is.null(max_y)) max_y <- max(c(dat_model$accidents[is.finite(dat_model$accidents)],
-                                       dat_model$expect[is.finite(dat_model$expect)],
-                                       dat_model$low[is.finite(dat_model$low)],
-                                       dat_model$upp[is.finite(dat_model$upp)],
-                                       dat_model$pearson_line[is.finite(dat_model$pearson_line)]),
-                                     na.rm=TRUE)*1.1
+    if (is.null(max_y)){
+      max_data <- c(dat_model$accidents, dat_model$expect, dat_model$low, dat_model$upp, dat_model$pearson_line)
+      max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
+    }
     p <- ggplot2::ggplot(dat_model,  ggplot2::aes(x=Date, y=accidents)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
@@ -249,12 +246,11 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
   }
   if (!is.null(exposition)){
-    if (is.null(max_y)) max_y <-  max(c(dat_model$accidents/dat_model$Exp[is.finite(dat_model$accidents/dat_model$Exp)],
-                                        dat_model$expect/dat_model$Exp[is.finite(dat_model$expect/dat_model$Exp)],
-                                        dat_model$low/dat_model$Exp[is.finite(dat_model$low/dat_model$Exp)],
-                                        dat_model$upp/dat_model$Exp[is.finite(dat_model$upp/dat_model$Exp)],
-                                        dat_model$pearson_line/dat_model$Exp[is.finite(dat_model$pearson_line/dat_model$Exp)]),
-                                      na.rm=TRUE)*1.1
+    if (is.null(max_y)){
+      max_data <- c(dat_model$accidents/dat_model$Exp, dat_model$expect/dat_model$Exp, dat_model$low/dat_model$Exp, dat_model$upp/dat_model$Exp,
+                    dat_model$pearson_line/dat_model$Exp)
+      max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
+    }
     scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
     p <- ggplot2::ggplot(dat_model,  ggplot2::aes(x=Date, y=accidents/Exp* scal)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +

@@ -14,7 +14,6 @@ timeseriesanalysis(
   main = NULL,
   max_y = NULL,
   x_axis = NULL,
-  silent = TRUE,
   lang = "en"
 )
 }
@@ -36,8 +35,6 @@ timeseriesanalysis(
 \item{max_y}{optional maximum value for the y-axis}
 
 \item{x_axis}{optional vector with the values for the x-axis}
-
-\item{silent}{parameter to suppress error messages during model evaluation}
 
 \item{lang}{language for output ("en", "fr", "de" or "it")}
 }

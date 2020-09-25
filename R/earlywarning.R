@@ -9,7 +9,6 @@
 #' @param main optional title for the plot
 #' @param x_axis optional vector with the values for the x-axis
 #' @param max_y optional maximum value for the y-axis
-#' @param silent parameter to suppress error messages during model evaluation
 #' @param lang language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
@@ -35,7 +34,8 @@
 
 
 earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 1000, conf.level = 0.9,
-                        main = NULL, silent = TRUE, x_axis =NULL, max_y = NULL, lang = "en") {
+                        main = NULL,  x_axis =NULL, max_y = NULL, lang = "en") {
+  silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
   ## check optional input
@@ -189,7 +189,6 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   }
   pred_new <- predict(fit, newdata=dat_model[dim(dat_model)[1], ], se.fit=TRUE, type="link")
   samp <- rnorm(n,  mean=pred_new$fit, sd=pred_new$se.fit)
-  #samp <-truncnorm::rtruncnorm(n, a=0, b=Inf, mean = pred_new$fit, sd = pred_new$se.fit)
   if (!is.null(fit$theta))
   {
     y_int <- rnbinom(n, mu=exp(samp), size = summary(fit)$theta)
@@ -218,16 +217,10 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     if (lang == "it") main <- paste("Sistema di allarme rapido", from, "-", until, sep=" ")
   }
   if (is.null(exposition)){
-    if (is.null(max_y)) max_y <- max(max( c(dat_total$accidents[is.finite(dat_total$accidents)],
-                                            dat_total$expect[is.finite(dat_total$expect)],
-                                            dat_total$low[is.finite(dat_total$low)],
-                                            dat_total$upp[is.finite(dat_total$upp)]), na.rm=TRUE),
-                            ci)*1.1
-    c(dat_total$accidents[is.finite(dat_total$accidents)],
-    dat_total$expect[is.finite(dat_total$expect)],
-    dat_total$low[is.finite(dat_total$low)],
-    dat_total$upp[is.finite(dat_total$upp)])
-
+    if (is.null(max_y)){
+      max_data <- c(dat_total$accidents, dat_total$expect, dat_total$low, dat_total$upp, ci)
+      max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
+    }
     p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
@@ -248,16 +241,11 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
   }
   if (!is.null(exposition)){
-    if (is.null(max_y)) max_y <- max(max(c(dat_total$accidents/dat_total$Exp[is.finite(dat_total$accidents/dat_total$Exp)],
-                                           dat_total$expect/dat_total$Exp[is.finite(dat_total$expect/dat_total$Exp)],
-                                           dat_total$low/dat_total$Exp[is.finite(dat_total$low/dat_total$Exp)],
-                                           dat_total$upp/dat_total$Exp[is.finite(dat_total$upp/dat_total$Exp)]), na.rm=TRUE),
-                                     ci/dat_model$Exp[length(dat_model$Exp)])*1.1
-    max(max( c(dat_total$accidents/dat_total$Exp[is.finite(dat_total$accidents/dat_total$Exp)],
-               dat_total$expect/dat_total$Exp[is.finite(dat_total$expect/dat_total$Exp)],
-               dat_total$low/dat_total$Exp[is.finite(dat_total$low/dat_total$Exp)],
-               dat_total$upp/dat_total$Exp[is.finite(dat_total$upp/dat_total$Exp)]), na.rm=TRUE),
-        ci)*1.1
+    if (is.null(max_y)){
+      max_data <- c(dat_total$accidents/dat_total$Exp, dat_total$expect/dat_total$Exp, dat_total$low/dat_total$Exp, dat_total$upp/dat_total$Exp,
+                    ci/dat_model$Exp[length(dat_model$Exp)])
+      max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
+    }
 
     scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
     p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents / Exp* scal)) +

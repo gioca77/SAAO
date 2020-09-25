@@ -12,7 +12,6 @@ earlywarning(
   n = 1000,
   conf.level = 0.9,
   main = NULL,
-  silent = TRUE,
   x_axis = NULL,
   max_y = NULL,
   lang = "en"
@@ -32,8 +31,6 @@ earlywarning(
 \item{conf.level}{level of the prediction interval}
 
 \item{main}{optional title for the plot}
-
-\item{silent}{parameter to suppress error messages during model evaluation}
 
 \item{x_axis}{optional vector with the values for the x-axis}
 

@@ -16,7 +16,6 @@ effectiveness(
   y_axis = NULL,
   max_y = NULL,
   KI_plot = TRUE,
-  silent = TRUE,
   lang = "en"
 )
 }
@@ -40,8 +39,6 @@ effectiveness(
 \item{max_y}{optional maximum value for the y-axis}
 
 \item{KI_plot}{TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)}
-
-\item{silent}{parameter to suppress error messages during model evaluation}
 
 \item{lang}{language for output ("en", "fr", "de" or "it")}
 }

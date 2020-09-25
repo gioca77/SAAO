@@ -13,11 +13,8 @@
 #' @param main optional title for the plot
 #' @param x_axis optional vector with the values for the x-axis
 #' @param max_y optional maximum value for the y-axis
-#' @param silent parameter to suppress error messages during model evaluation
 #' @param lang language for output ("en", "fr", "de" or "it")
 #' @param KI_plot TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)
-#' @param silent parameter to suppress error messages during model evaluation
-#' @param lang language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
 #'   ex1 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
@@ -40,7 +37,9 @@
 #'   plot(ex7)
 
 
-effectiveness <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL, until = NULL, main = NULL, x_axis = NULL, y_axis = NULL, max_y = NULL, KI_plot = TRUE, silent = TRUE, lang = "en"){
+effectiveness <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL, until = NULL, main = NULL, x_axis = NULL,
+                          y_axis = NULL, max_y = NULL, KI_plot = TRUE,  lang = "en"){
+  silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
   measure_start <- try(as.Date(measure_start, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
