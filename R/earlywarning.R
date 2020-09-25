@@ -105,14 +105,24 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       msg = "'conf.level' must be between 0 and 1",
       argcheck = Check
     )
+  #* check until > from
+  if (is(from)[1]=="Date" & is(until)[1]=="Date"){
+    if (from > until)
+      addError_sep(msg = "'until has to be greater then from'",
+                   argcheck = Check)
+  }
   #* Return errors and warnings (if any)
   finishArgCheck_sep(Check)
 
   ## processing input
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
+  if(from > until) stop("until has to be greater then from")
   timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(until, '%Y'))),"-", format(until, '%m-%d')))+1
   if (from[1]>timeserie[1]) timeserie <- timeserie[-1]
+  if (length(timeserie)<4){
+    stop("time series too short (less than 4 years)")
+  }
   dat_model <- as.data.frame(matrix(NA, nrow=length(timeserie)-1, ncol=2))
   colnames(dat_model) <- c("Date", "accidents")
   dat_model$Date <- as.Date((as.numeric(timeserie[1:(length(timeserie) - 1)]) + as.numeric(timeserie[2:length(timeserie)] - 1)) / 2, origin="1970-01-01")
@@ -179,6 +189,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   }
   pred_new <- predict(fit, newdata=dat_model[dim(dat_model)[1], ], se.fit=TRUE, type="link")
   samp <- rnorm(n,  mean=pred_new$fit, sd=pred_new$se.fit)
+  samp <-truncnorm::rtruncnorm(n, a=0, b=Inf, mean = pred_new$fit, sd = pred_new$se.fit)
   if (!is.null(fit$theta))
   {
     y_int <- rnbinom(n, mu=exp(samp), size = summary(fit)$theta)
@@ -256,6 +267,8 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))
     if (lang == "it") p <- p + ggplot2::ylab(paste("Tasso di incidenti *", formatC(scal, format = "e", digits = 0)))
   }
+  if (lang == "de") p <- p + ggplot2::xlab("Datum")
+  if (lang == "it") p <- p + ggplot2::xlab("Data")
   output <- list( ci = ci, data = dat_total, fit=fit, test_overdisp = test_overdisp, plot = p, lang = lang)
   class(output) <- "class_earlywarning"
   return(output)

@@ -51,7 +51,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       colnames(exposition)[1:2] <- c("time", "Exp")
       if (any(nchar(as.character(exposition$time))!=4)){
         exposition$time <- try(as.Date(exposition$time, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
-      } else expostion$time <- try(as.numeric(exposition$time), silent = silent)
+      } else exposition$time <- try(as.numeric(exposition$time), silent = silent)
     }
   }
   if (!is.null(from)){
@@ -119,7 +119,18 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       msg = "'wrong time format for 'until'",
       argcheck = Check
     )
-
+  #* check until > from
+  if (is(from)[1]=="Date" & is(until)[1]=="Date"){
+    if (from > until)
+      addError_sep(msg = "'until has to be greater then from'",
+                   argcheck = Check)
+  }
+  #* check measure_end >= measure_start
+  if (is(measure_end)[1]=="Date" & is(measure_start)[1]=="Date"){
+    if (measure_start > measure_end)
+      addError_sep(msg = "'measure_end has to be greater or equal then measure_start'",
+                   argcheck = Check)
+  }
   #* Return errors and warnings (if any)
   finishArgCheck_sep(Check)
 
@@ -127,12 +138,14 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   measure_mean <- as.Date(mean(c(as.numeric(measure_start),as.numeric(measure_end))), origin="1970-01-01")
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
+  if(from > until) stop("until has to be greater then from")
   before <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(measure_start, '%Y'))),"-", format(measure_start, '%m-%d')))
   if (from>before[1]) before <- before[-1]
   after <- as.Date(paste0(as.numeric(format(measure_end, '%Y')):as.numeric( format(until+1, '%Y')),"-", format(measure_end, '%m-%d')))
   if (until+1<after[length(after)]) after <- after[-length(after)]
   ## generate data for model
   dat_before <- as.data.frame(matrix(NA, nrow=length(before)-1, ncol=2))
+  if (dim(dat_before)[1]==0) stop("timeserie before measure start not long enough")
   colnames(dat_before) <- c("Date", "accidents")
   dat_before$Date <- as.Date((as.numeric(before[1:(length(before)-1)])+as.numeric(before[2:length(before)]-1))/2, origin="1970-01-01")
   for (i in 1:(length(before)-1)){
@@ -140,6 +153,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   dat_before$measure <- factor("before", levels=c("before", "after")) #"before" # indicator variable
   dat_after <- as.data.frame(matrix(NA, nrow=length(after)-1, ncol=2))
+  if (dim(dat_after)[1]==0) stop("timeserie after measure end not long enough")
   colnames(dat_after) <- c("Date", "accidents")
   dat_after$Date <- as.Date((as.numeric(after[1:(length(after)-1)]) + as.numeric(after[2:length(after)]-1))/2, origin="1970-01-01")
   for (i in 1:(length(after)-1)){
@@ -375,6 +389,8 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       p <- p +
         ggplot2::scale_y_continuous(breaks=  scales::pretty_breaks())
     }
+    if (lang == "de") p <- p + ggplot2::ylab("Unfaelle")
+    if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
   }
   if (!is.null(exposition)){
     if (is.null(max_y)) max_y <- max(dat_total$expect/dat_total$Exp, dat_total$accidents/dat_total$Exp,
@@ -424,7 +440,13 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       p <- p +
         ggplot2::scale_y_continuous(breaks=  scales::pretty_breaks())
     }
+    if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
+    if (lang == "de") p <- p + ggplot2::ylab(paste("Unfallrate *", formatC(scal, format = "e", digits = 0)))
+    if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))
+    if (lang == "it") p <- p + ggplot2::ylab(paste("Tasso di incidenti *", formatC(scal, format = "e", digits = 0)))
   }
+  if (lang == "de") p <- p + ggplot2::xlab("Datum")
+  if (lang == "it") p <- p + ggplot2::xlab("Data")
   ## Additional optional plot with 95% confidence interval for measure effectiveness
   if (KI_plot){
     d <- expect_before[dim(expect_before)[1], "expect"]-expect_after[1, "expect"]
@@ -468,7 +490,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   measure <- "Effect of measures"
   min_model <- which(object$modelname==modelname)
   if (object$lang == "de"){
-    modelname <- c("Massnahmen- und Trendeffekt", "Trendeffekt", "Massnahmeneffekt and Trend",
+    modelname <- c("Massnahmen- und Trendeffekt", "Trendeffekt", "Massnahmeneffekt und Trend",
                    "Massnahmeneffekt", "Trend", "kein Effekt")
     reliability <- c("nicht verlaesslich, keine Wirkung nachgewiesen", "stark verlaesslich", "gut verlaesslich", "schwach verlaesslich")
     measure <- "Massnahmeneffekt"

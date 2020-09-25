@@ -99,14 +99,24 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       msg = "wrong time format for 'until'",
       argcheck = Check
     )
+  #* check until > from
+  if (is(from)[1]=="Date" & is(until)[1]=="Date"){
+    if (from > until)
+      addError_sep(msg = "'until has to be greater then from'",
+                   argcheck = Check)
+  }
 
   #* Return errors and warnings (if any)
   finishArgCheck_sep(Check)
   ## processing input
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
+  if(from > until) stop("until has to be greater then from")
   timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(until, '%Y'))),"-", format(until, '%m-%d')))+1
   if (from[1]>timeserie[1]) timeserie <- timeserie[-1]
+  if (length(timeserie)<3){
+    stop("time series too short (less than 3 years)")
+  }
   dat_model <- as.data.frame(matrix(NA, nrow=length(timeserie)-1, ncol=2))
   colnames(dat_model) <- c("Date", "accidents")
   dat_model$Date <- as.Date((as.numeric(timeserie[1:(length(timeserie) - 1)]) + as.numeric(timeserie[2:length(timeserie)] - 1)) / 2, origin="1970-01-01")
@@ -170,6 +180,9 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
         overdisp <- TRUE
       } else warning("Warning: Overdispersion in the Poisson Model, but Negative Binomial Model could not be estimated")
     }
+  }
+  if (fit$df.residual==0){
+    stop("Too few data for reliable estimating the model parameters")
   }
   ## Expected value
   dat_model$expect <- predict(fit, type="response")
@@ -256,7 +269,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   trend <- as.numeric((exp(summary(fit)$coefficients["Date", 1])-1) * difftime(until, from, units="day") / dim(dat_model)[1])
   p_value_trend <- summary(fit)$coefficients["Date", 4]
   if (lang == "de") p <- p + ggplot2::xlab("Datum")
-  if (lang == "it") p <- p + ggplot2::xlab("Date")
+  if (lang == "it") p <- p + ggplot2::xlab("Data")
   output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
                  test_overdisp = test_overdisp, plot= p, lang = lang)
   class(output) <- "class_timeseriesanalyis"
