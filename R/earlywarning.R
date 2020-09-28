@@ -33,11 +33,13 @@
 #'   summary(ex7)
 
 
-earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 1000, conf.level = 0.9,
-                        main = NULL,  x_axis = NULL, max_y = NULL, lang = "en") {
+earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 1000,
+                         conf.level = 0.9, main = NULL,  x_axis = NULL, max_y = NULL,
+                         lang = "en") {
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
-  accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
+  accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
+                   silent = silent)
   ## check optional input
   if (!is.null(exposition) & !is.null(dim(exposition))){
     if (dim(exposition)[2]>=2){
@@ -118,7 +120,8 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
   if(from > until) stop("until has to be greater then from")
-  timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(until, '%Y'))),"-", format(until, '%m-%d')))+1
+  timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(until, '%Y'))),"-",
+                              format(until+1, '%m-%d')))
   if (from[1]>timeserie[1]) timeserie <- timeserie[-1]
   if (length(timeserie)<4){
     stop("time series too short (less than 4 years)")
