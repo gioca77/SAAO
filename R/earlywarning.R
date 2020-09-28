@@ -34,7 +34,7 @@
 
 
 earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 1000, conf.level = 0.9,
-                        main = NULL,  x_axis =NULL, max_y = NULL, lang = "en") {
+                        main = NULL,  x_axis = NULL, max_y = NULL, lang = "en") {
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
@@ -113,7 +113,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   }
   #* Return errors and warnings (if any)
   finishArgCheck_sep(Check)
-
+  if (any(format(accidents, '%Y')<100)) warning('Check the time format. Only the following formats are supported: "%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"')
   ## processing input
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
@@ -206,6 +206,15 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
                         expect = exp(preds$fit),
                         low = exp(preds$fit-qnorm(0.975)*preds$se.fit),
                         upp = exp(preds$fit+qnorm(0.975)*preds$se.fit))
+  if(sum(dat_fit$upp != Inf) == 0){
+    faelle <- dim(dat_fit)[1]
+    q_Jahr <- 0.05^{1/faelle}
+    lambda_est <- -log(q_Jahr)
+    dat_fit$upp <- lambda_est
+    ci <- c(0, qpois(conf.level, lambda_est)) ## Allenfalls 90?
+    warning(paste0("Since all values are 0, the prediction interval cannot be determined by simulation. Estimation by ",
+                   conf.level, " quantile of the Poisson distribution."))
+  }
   dat_total <- merge(x=dat_model, y=dat_fit, by="Date", all=TRUE)
   col_w <- ifelse(dat_total[dat_total$Date==max(dat_total$Date),"accidents"]>ci[2], "red", "black")
   # Base plot
@@ -346,6 +355,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     cat("\n", paste(object$fit$family$family, model))
   }
   cat("\n", paste(pv, od, round(object$test_overdisp, 3)))
+  cat("\n")
 }
 
 

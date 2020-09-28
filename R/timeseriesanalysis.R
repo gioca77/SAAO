@@ -104,14 +104,14 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       addError_sep(msg = "'until has to be greater then from'",
                    argcheck = Check)
   }
-
   #* Return errors and warnings (if any)
   finishArgCheck_sep(Check)
+  if (any(format(accidents, '%Y')<100)) warning('Check the time format. Only the following formats are supported: "%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"')
   ## processing input
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
   if(from > until) stop("until has to be greater then from")
-  timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(until, '%Y'))),"-", format(until, '%m-%d')))+1
+  timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(until, '%Y'))),"-", format(until+1, '%m-%d')))
   if (from[1]>timeserie[1]) timeserie <- timeserie[-1]
   if (length(timeserie)<3){
     stop("time series too short (less than 3 years)")
@@ -190,11 +190,16 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   dat_model$low <- exp(preds$fit - qnorm(0.975) * preds$se.fit)
   dat_model$upp <- exp(preds$fit + qnorm(0.975) * preds$se.fit)
   dat_model$Date <- fit$model$Date
+  if(sum(dat_model$upp != Inf) == 0){
+    faelle <- dim(dat_model)[1]
+    q_Jahr <- 0.05^{1/faelle}
+    lambda_est <- -log(q_Jahr)
+    dat_model$upp <- lambda_est
+  }
   ## Pearson residuals for outliers and pearson-Line
   if (grepl("Negative Binomial", x=fit$family$family)){
     dat_model$pearson_line <- fit$fitted.values + 2 * sqrt(fit$fitted.values+(fit$fitted.values^2/fit$theta))
     dat_model$pearson <- residuals.glm(fit, type="pearson")>=2
-
     ##stats::rstandard(fit, type="pearson")>=2
   }
   if (fit$family$family=="poisson"){
@@ -237,8 +242,8 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       ggplot2::geom_point(ggplot2::aes(colour=col)) +
       ggplot2::scale_colour_manual(values = c("black", "orange", "red"), guide = FALSE) +
       ggplot2::geom_line(ggplot2::aes(y=expect), col="blue")+
-      ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(), expand = c(0, 0), limits = c(0,max_y))+
-      ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
+      ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(), expand = c(0, 0), limits = c(0,max_y)) +
+      ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y")) +
       ggplot2::ggtitle(main) +
       ggplot2::theme_bw()
     if (pearson_line) p <- p + ggplot2::geom_line(ggplot2::aes(x=Date, y=pearson_line), linetype=2, colour="orange")
@@ -355,6 +360,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   }
   cat("\n", paste(pv, od, round(object$test_overdisp, 3)))
   cat("\n", paste0(trend,": ", direction, " ", round(object$trend*100, 2), "% (", reliability[k] ,")"))
+  cat("\n")
 }
 
 

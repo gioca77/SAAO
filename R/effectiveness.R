@@ -42,6 +42,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
+
   measure_start <- try(as.Date(measure_start, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
   measure_end <- try(as.Date(measure_end, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
   ## check optional input
@@ -132,7 +133,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   #* Return errors and warnings (if any)
   finishArgCheck_sep(Check)
-
+  if (any(format(accidents, '%Y')<100)) warning('Check the time format. Only the following formats are supported: "%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"')
   ## processing input
   measure_mean <- as.Date(mean(c(as.numeric(measure_start),as.numeric(measure_end))), origin="1970-01-01")
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
@@ -330,10 +331,10 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   if (is.null(main)) main <- paste("measure", paste(measure_mean, collapse = ","), sep=" ")
   if (is.null(x_axis)) x_axis <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric(format(until, '%Y'))+1), "-01-01"))
   # if (test_conf){
-  if(sum(after_bor$upp[after_bor$measure=="after"] != Inf)==0){
+  if(sum(after_bor$upp[after_bor$measure=="after"] != Inf) == 0){
     #if(Modell_final=="Unfaelle ~ Massnahme"){ #macht das bei den anderen Modellen auch Sinn
     faelle <- sum(after_bor$measure=="after")
-    q_Jahr <- 0.025^{1/faelle}
+    q_Jahr <- 0.05^{1/faelle}
     #plot(x=1:10, y=0.025^(1/(1:10)), pch=16, xlab="Jahre", ylab="P(0 pro Jahr)", las=1)
     lambda_est <- -log(q_Jahr)#seq(0, 5, 0.001)[which(qpois(q_Jahr, lambda=seq(0, 5, 0.001))>0)[1]-1]
     #qpois(1-q_Jahr,lambda=lambda_est)
@@ -524,6 +525,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   cat(modelname[min_model])
   if (min_model==1 & !is.na(object$pvalue_interaction)) cat("\n", paste0(measure,": ", object$pvalue_measure))
   if (!(min_model==1 & !is.na(object$pvalue_interaction))) cat("\n", paste0(measure,": ", reliability[k]))
+  cat("\n")
 }
 
 #' Function to plot class effectiveness
