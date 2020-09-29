@@ -9,6 +9,7 @@
 #' @param main optional title for the plot
 #' @param x_axis optional vector with the values for the x-axis
 #' @param max_y optional maximum value for the y-axis
+#' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
 #' @param lang language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
@@ -35,7 +36,7 @@
 
 earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 1000,
                          conf.level = 0.9, main = NULL,  x_axis = NULL, max_y = NULL,
-                         lang = "en") {
+                         orientation_x = NULL, lang = "en") {
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
@@ -62,6 +63,12 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   if (!(lang %in% c("en", "de", "it", "fr"))){
     lang <- "en"
     warning("language unknown, set to english")
+  }
+  if (!is.null(orientation_x)){
+    if (!(orientation_x %in% c("v", "V", "h", "H"))){
+      orientation_x <- NULL
+      warning('For orientation_x only "v" or "h" are allowed')
+    }
   }
   Check <- newArgCheck_sep()
   #* accidents format
@@ -221,6 +228,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   dat_total <- merge(x=dat_model, y=dat_fit, by="Date", all=TRUE)
   col_w <- ifelse(dat_total[dat_total$Date==max(dat_total$Date),"accidents"]>ci[2], "red", "black")
   # Base plot
+  if (is.null(orientation_x)) orientation_x <- ifelse(diff(as.numeric(format(range(dat_total$Date), '%Y'))) > 8, "v", "h")
   if (is.null(x_axis)) x_axis <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric(format(until, '%Y'))+1), "-01-01"))
   if (is.null(main)){
     if (lang == "en") main <- paste("Early Warning System")
@@ -249,6 +257,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
       ggplot2::ggtitle(main) +
       ggplot2::theme_bw()
+    if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "de") p <- p + ggplot2::ylab("Unfaelle")
     if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
   }
@@ -279,6 +288,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
       ggplot2::ggtitle(main) +
       ggplot2::theme_bw()
+    if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "de") p <- p + ggplot2::ylab(paste("Unfallrate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))

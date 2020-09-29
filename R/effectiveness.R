@@ -13,6 +13,7 @@
 #' @param main optional title for the plot
 #' @param x_axis optional vector with the values for the x-axis
 #' @param max_y optional maximum value for the y-axis
+#' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
 #' @param lang language for output ("en", "fr", "de" or "it")
 #' @param KI_plot TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)
 #' @export
@@ -37,14 +38,17 @@
 #'   plot(ex7)
 
 
-effectiveness <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL, until = NULL, main = NULL, x_axis = NULL,
-                          y_axis = NULL, max_y = NULL, KI_plot = TRUE,  lang = "en"){
+effectiveness <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL,
+                          until = NULL, main = NULL, x_axis = NULL,
+                          y_axis = NULL, max_y = NULL, orientation_x = NULL, KI_plot = TRUE,  lang = "en"){
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
-  accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
-
-  measure_start <- try(as.Date(measure_start, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
-  measure_end <- try(as.Date(measure_end, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
+  accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
+                   silent = silent)
+  measure_start <- try(as.Date(measure_start, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
+                       silent = silent)
+  measure_end <- try(as.Date(measure_end, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
+                     silent = silent)
   ## check optional input
   if (!is.null(exposition) & !is.null(dim(exposition))){
     if (dim(exposition)[2] >= 2){
@@ -56,19 +60,26 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   if (!is.null(from)){
     if (nchar(as.character(from)) != 4){
-      from <- try(as.Date(from, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
+      from <- try(as.Date(from, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
+                  silent = silent)
     } else from <-  try(as.Date(paste0(from, "-01-01")), silent=silent)
   }
   if (!is.null(until)){
     if (nchar(as.character(until)) != 4){
-      until <- try(as.Date(until, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent = silent)
+      until <- try(as.Date(until, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
+                   silent = silent)
     } else until <-  try(as.Date(paste0(until, "-12-31")), silent = silent)
   }
   if (!(lang %in% c("en", "de", "it", "fr"))){
     lang <- "en"
     warning("language unknown, set to english")
   }
-
+  if (!is.null(orientation_x)){
+    if (!(orientation_x %in% c("v", "V", "h", "H"))){
+      orientation_x <- NULL
+      warning('For orientation_x only "v" or "h" are allowed')
+    }
+  }
   Check <- newArgCheck_sep()
   #* accidents format
   if (is(accidents)[1] ==  "try-error")
@@ -134,11 +145,15 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   #* Return errors and warnings (if any)
   finishArgCheck_sep(Check)
   if (any(format(accidents, '%Y')<100)) warning('Check the time format. Only the following formats are supported: "%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"')
+  if (format(measure_start, '%Y')<100) warning('Check the time format of measure_start. Only the following formats are supported: "%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"')
+  if (format(measure_end, '%Y')<100) warning('Check the time format of measure_end. Only the following formats are supported: "%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"')
   ## processing input
   measure_mean <- as.Date(mean(c(as.numeric(measure_start),as.numeric(measure_end))), origin="1970-01-01")
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
-  if(from > until) stop("until has to be greater then from")
+  if (from > until) stop("until has to be greater then from")
+  if (from > measure_start) stop("measure_start has to be after from")
+  if (until < measure_end) stop("measure_end has to be before until")
   before <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(measure_start, '%Y'))),"-", format(measure_start, '%m-%d')))
   if (from>before[1]) before <- before[-1]
   after <- as.Date(paste0(as.numeric(format(measure_end, '%Y')):as.numeric( format(until+1, '%Y')),"-", format(measure_end, '%m-%d')))
@@ -160,7 +175,6 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     dat_after[i,2] <- sum(accidents >= after[i] & accidents < after[i+1])
   }
   dat_after$measure <- factor("after", levels=c("before", "after")) #  indicator variable
-
   ## add exposition to data
   if (!is.null(exposition)){
     tab <- data.frame(Date=seq(from, until, 1), Exp=exposition$Exp[1])
@@ -343,6 +357,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     expect_after$upp <- lambda_est
   }
   # Base plot
+  if (is.null(orientation_x)) orientation_x <- ifelse(diff(as.numeric(format(range(dat_total$Date), '%Y'))) > 8, "v", "h")
   if (is.null(exposition)){
     p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents)) +
       ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
@@ -389,6 +404,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       p <- p +
         ggplot2::scale_y_continuous(breaks=  scales::pretty_breaks())
     }
+    if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "de") p <- p + ggplot2::ylab("Unfaelle")
     if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
   }
@@ -440,6 +456,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       p <- p +
         ggplot2::scale_y_continuous(breaks=  scales::pretty_breaks())
     }
+    if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "de") p <- p + ggplot2::ylab(paste("Unfallrate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))

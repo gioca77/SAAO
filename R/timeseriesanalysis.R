@@ -9,6 +9,7 @@
 #' @param main optional title for the plot
 #' @param x_axis optional vector with the values for the x-axis
 #' @param max_y optional maximum value for the y-axis
+#' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
 #' @param lang language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
@@ -32,8 +33,10 @@
 #'   ex7 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex3)
 #'   summary(ex7)
 
-timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until = NULL, pearson_line = TRUE, show_outliers = FALSE,
-                                main = NULL, max_y = NULL, x_axis = NULL, lang = "en"){
+timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until = NULL,
+                               pearson_line = TRUE, show_outliers = FALSE,
+                               main = NULL, max_y = NULL, x_axis = NULL,
+                               orientation_x = NULL, lang = "en"){
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent=silent)
@@ -59,6 +62,12 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   if (!(lang %in% c("en", "de", "it", "fr"))){
     lang <- "en"
     warning("language unknown, set to english")
+  }
+  if (!is.null(orientation_x)){
+    if (!(orientation_x %in% c("v", "V", "h", "H"))){
+      orientation_x <- NULL
+      warning('For orientation_x only "v" or "h" are allowed')
+    }
   }
   Check <- newArgCheck_sep()
   #* accidents format
@@ -229,6 +238,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     if (lang == "it") main <- paste("Analisi delle serie temporali", from, "-", until, sep=" ")
   }
   # Base plot
+  if (is.null(orientation_x)) orientation_x <- ifelse(diff(as.numeric(format(range(dat_model$Date), '%Y'))) > 8, "v", "h")
   if (is.null(exposition)){
     if (is.null(max_y)){
       max_data <- c(dat_model$accidents, dat_model$expect, dat_model$low, dat_model$upp, dat_model$pearson_line)
@@ -247,6 +257,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       ggplot2::ggtitle(main) +
       ggplot2::theme_bw()
     if (pearson_line) p <- p + ggplot2::geom_line(ggplot2::aes(x=Date, y=pearson_line), linetype=2, colour="orange")
+    if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "de") p <- p + ggplot2::ylab("Unfaelle")
     if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
   }
@@ -270,6 +281,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       ggplot2::ggtitle(main)+
       ggplot2::theme_bw()
     if (pearson_line) p <- p + ggplot2::geom_line(ggplot2::aes(x=Date, y=pearson_line/Exp* scal), linetype=2, colour="orange")
+    if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "de") p <- p + ggplot2::ylab(paste("Unfallrate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))

@@ -14,6 +14,7 @@ earlywarning(
   main = NULL,
   x_axis = NULL,
   max_y = NULL,
+  orientation_x = NULL,
   lang = "en"
 )
 }
@@ -35,6 +36,8 @@ earlywarning(
 \item{x_axis}{optional vector with the values for the x-axis}
 
 \item{max_y}{optional maximum value for the y-axis}
+
+\item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical}
 
 \item{lang}{language for output ("en", "fr", "de" or "it")}
 }
