@@ -519,17 +519,31 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   reliability <- c("not reliable, no effect proven", "highly reliable", "well reliable", "weakly reliable")
   measure <- "Effect of measures"
   min_model <- which(object$modelname==modelname)
+  if (object$lang == "en"){
+    model <- "model"
+    nb <- "Negative binomial"
+    pv <- "p-value"
+    od <- "overdispersion"
+  }
   if (object$lang == "de"){
     modelname <- c("Massnahmen- und Trendeffekt", "Trendeffekt", "Massnahmeneffekt und Trend",
                    "Massnahmeneffekt", "Trend", "kein Effekt")
     reliability <- c("nicht verlaesslich, keine Wirkung nachgewiesen", "stark verlaesslich", "gut verlaesslich", "schwach verlaesslich")
     measure <- "Massnahmeneffekt"
+    model <- "Modell"
+    nb <- "Negative Binomial"
+    pv <- "p-Wert"
+    od <- "Overdispersion"
   }
   if (object$lang == "fr"){
     modelname <- c("Effet des mesures et de la tendance", "Effet de tendance", "Effet des mesures et tendance",
                    "Effet des mesures", "Tendance", "aucun effet")
     reliability <- c("pas fiable, pas d'effet prouve", "tres fiable", "assez fiable", "faiblement fiable")
     measure <- "Effet des mesures"
+    model <- "model"
+    nb <- "binomiale negative"
+    pv <- "valeur p"
+    od <- "overdispersion"
   }
   if (object$lang == "it"){
     modelname <- c("Misure ed effetto tendenza", "Effetto tendenza", "Effetto delle misure ed tendenza",
@@ -537,6 +551,10 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     reliability <- c("non affidabile, nessun effett provato", "altamente affidabile", "altamente affidabile",
                      "debolmente affidabile")
     measure <- "Effetto delle misure"
+    model <- "modello"
+    nb <- "binomiale negativa"
+    pv <- "Valore p"
+    od <- "overdispersion"
   }
   if (is.na(object$conf_limit)){
     if(is.na(object$pvalue_measure))
@@ -567,6 +585,15 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   print(object$plot)
   cat(modelname[min_model])
+  if (!is.null(object$fit$theta))
+  {
+    cat("\n", paste(nb, model, "(Theta =", round(object$fit$theta, 2), ")"))
+  }
+  if (is.null(object$fit$theta))
+  {
+    cat("\n", paste(object$fit$family$family, model))
+  }
+  cat("\n", paste(pv, od, round(object$test_overdisp, 3)))
   if (!is.na(object$conf_limit)) cat("\n", paste0(measure,": ", reliability[k], " (",object$pvalue_measure, ")"))
   if (is.na(object$conf_limit)) cat("\n", paste0(measure,": ", reliability[k]))
   cat("\n")

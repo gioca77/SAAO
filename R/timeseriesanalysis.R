@@ -314,7 +314,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     model <- "model"
     nb <- "Negative binomial"
     pv <- "p-value"
-    od <- "overdispersion:"
+    od <- "overdispersion"
   }
   if (object$lang == "de"){
     reliability <- c("nicht verlaesslich, keine Wirkung nachgewiesen", "stark verlaesslich", "gut verlaesslich", "schwach verlaesslich")
@@ -343,7 +343,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     rise <- "aumento annuo del"
     fall <- "decremento annuo del"
     model <- "modello"
-    nb <- " binomiale negativa"
+    nb <- "binomiale negativa"
     pv <- "Valore p"
     od <- "overdispersion"
   }
