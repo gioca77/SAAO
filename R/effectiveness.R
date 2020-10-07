@@ -274,7 +274,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   ## For the model with interaction, an estimation for the p-value for the measure is made over the confidence intervals.
   ## (Only if interaction term negative)
   conf_limit <- NA
-  if(min_model==1 & !is.na(pvalue_interaction)){
+  if(min_model==1){
     pvalue_measure <- NA
     bef <- data.frame(measure=factor("before", levels=c("before", "after")), Date=measure_mean)
     aft <- data.frame(measure=factor("after", levels=c("before", "after")), Date=measure_mean)
@@ -293,6 +293,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     conf_limit <- intervalle[which(i_v-i_n<0)[1]-1]*100
     if(is.na(conf_limit)) conf_limit <- "> 99.99"
     pvalue_measure <- paste("no overlap of the ", conf_limit, "%-confidence interval", sep="")
+    if (is.na(pvalue_interaction)) pvalue_measure <- paste(pvalue_measure, " !Attention negative trend effect!", sep="")
   }
   pvalue_trend <- NA
   if("Date" %in% rownames(summary(fit)$coefficients)){
@@ -553,21 +554,21 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     } else k <- 1
   }
   if (!is.na(object$conf_limit)){
-    if(object$conf_limit <= 99 | object$conf_limit == "> 99.99")
+    if(object$conf_limit >= 99 | object$conf_limit == "> 99.99")
     {
       k<- 2
-    } else if (object$pvalue_measure > 99 && object$pvalue_measure <= 95)
+    } else if (object$conf_limit < 99 && object$conf_limit >= 95)
     {
       k <- 3
-    } else if (object$pvalue_measure > 95 && object$pvalue_measure <= 90)
+    } else if (object$conf_limit < 95 && object$conf_limit >= 90)
     {
       k <- 4
     } else k <- 1
   }
   print(object$plot)
   cat(modelname[min_model])
-  if (min_model==1 & !is.na(object$pvalue_interaction)) cat("\n", paste0(measure,": ", "> 99.99", "(",object$pvalue_measure, ")"))
-  if (!(min_model==1 & !is.na(object$pvalue_interaction))) cat("\n", paste0(measure,": ", reliability[k]))
+  if (!is.na(object$conf_limit)) cat("\n", paste0(measure,": ", reliability[k], " (",object$pvalue_measure, ")"))
+  if (is.na(object$conf_limit)) cat("\n", paste0(measure,": ", reliability[k]))
   cat("\n")
 }
 
