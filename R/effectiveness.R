@@ -41,7 +41,9 @@
 effectiveness <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL,
                           until = NULL, main = NULL, x_axis = NULL,
                           y_axis = NULL, max_y = NULL, orientation_x = NULL, KI_plot = TRUE,  lang = "en"){
+  ## internal parameters
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
+  intervalle <- c(seq(0.01,0.99,0.01),0.991,0.992,0.993,0.994, 0.995, 0.996, 0.997, 0.998, 0.999, 0.9999) #Confidence intervals taken into account
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
                    silent = silent)
@@ -262,7 +264,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   ## p_value for the measure effect only with negative measure effect, 1-sided test-> p-value/2
   pvalue_measure <- NA
   if("measureafter" %in% rownames(summary(fit)$coefficients) & min_model!=1){
-    pvalue_measure <- ifelse(coef(summary(fit))["measureafter", 1]<0, coef(summary(fit))["measureafter", 4]/2,NA)
+    pvalue_measure <- ifelse(coef(summary(fit))["measureafter", 1] < 0, coef(summary(fit))["measureafter", 4]/2,NA)
   }
   ## p_value for interaction only if the interaction term is negative
   pvalue_interaction <- NA
@@ -271,6 +273,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   ## For the model with interaction, an estimation for the p-value for the measure is made over the confidence intervals.
   ## (Only if interaction term negative)
+  conf_limit <- NA
   if(min_model==1 & !is.na(pvalue_interaction)){
     pvalue_measure <- NA
     bef <- data.frame(measure=factor("before", levels=c("before", "after")), Date=measure_mean)
@@ -281,14 +284,15 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     }
     preds_bef <- try(predict(fit, type="link", newdata = bef, se.fit = TRUE), silent=silent)
     preds_aft <- try(predict(fit, type="link", newdata = aft, se.fit = TRUE), silent=silent)
-    intervalle <- c(seq(0.01,0.99,0.01),0.991,0.992,0.993,0.994, 0.995, 0.996, 0.997, 0.998, 0.999, 0.9999, 0.99999, 0.999999)
     if (is(preds_bef)[1]!="try-error"){
       i_v <- exp(preds_bef$fit-1*qnorm(intervalle)*preds_bef$se.fit)
     }
     if (is(preds_aft)[1]!="try-error"){
       i_n <- exp(preds_aft$fit+qnorm(intervalle)*preds_aft$se.fit)
     }
-    pvalue_measure <- paste("no overlap of the ", intervalle[which(i_v-i_n<0)[1]-1]*100, "%-confidence interval", sep="")
+    conf_limit <- intervalle[which(i_v-i_n<0)[1]-1]*100
+    if(is.na(conf_limit)) conf_limit <- "> 99.99"
+    pvalue_measure <- paste("no overlap of the ", conf_limit, "%-confidence interval", sep="")
   }
   pvalue_trend <- NA
   if("Date" %in% rownames(summary(fit)$coefficients)){
@@ -346,15 +350,22 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   if (is.null(x_axis)) x_axis <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric(format(until, '%Y'))+1), "-01-01"))
   # if (test_conf){
   if(sum(after_bor$upp[after_bor$measure=="after"] != Inf) == 0){
-    #if(Modell_final=="Unfaelle ~ Massnahme"){ #macht das bei den anderen Modellen auch Sinn
     faelle <- sum(after_bor$measure=="after")
     q_Jahr <- 0.05^{1/faelle}
-    #plot(x=1:10, y=0.025^(1/(1:10)), pch=16, xlab="Jahre", ylab="P(0 pro Jahr)", las=1)
-    lambda_est <- -log(q_Jahr)#seq(0, 5, 0.001)[which(qpois(q_Jahr, lambda=seq(0, 5, 0.001))>0)[1]-1]
-    #qpois(1-q_Jahr,lambda=lambda_est)
-    after_bor$upp[after_bor$measure=="after"] <- lambda_est#0.5*qchisq(1-q_Jahr, df=2*lambda_est)
+    lambda_est <- -log(q_Jahr)
+    #after_bor$upp[after_bor$measure=="after"] <- lambda_est #0.5*qchisq(1-q_Jahr, df=2*lambda_est)
     after_bor$upp <- lambda_est
     expect_after$upp <- lambda_est
+    bef <- data.frame(measure=factor("before", levels=c("before", "after")), Date=measure_mean)
+    preds_bef <- try(predict(fit, type="link", newdata = bef, se.fit = TRUE), silent=silent)
+    if (is(preds_bef)[1]!="try-error"){
+      i_v <- exp(preds_bef$fit-1*qnorm(intervalle)*preds_bef$se.fit)
+    }
+    q_Jahr_int <- (1-intervalle)^{1/faelle}
+    i_n <- -log(q_Jahr_int)
+    conf_limit <- intervalle[which(i_v-i_n<0)[1]-1]*100
+    if(is.na(conf_limit)) conf_limit <- "> 99.99"
+    pvalue_measure <- paste("no overlap of the ", conf_limit, "%-confidence interval", sep="")
   }
   # Base plot
   if (is.null(orientation_x)) orientation_x <- ifelse(diff(as.numeric(format(range(dat_total$Date), '%Y'))) > 8, "v", "h")
@@ -484,8 +495,9 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
             axis.text.y=ggplot2::element_blank())
   }
   if (!KI_plot) p2 = NULL
-  output <- list(fit = fit, modelname=modelname, data = rbind(expect_before, expect_after),  pvalue_measure= pvalue_measure, pvalue_trend=pvalue_trend,  pvalue_interaction= pvalue_interaction,
-                 test_overdisp = test_overdisp, plot_KI = p2,  plot=p, lang = lang)
+  output <- list(fit = fit, modelname=modelname, data = rbind(expect_before, expect_after),  pvalue_measure= pvalue_measure,
+                 pvalue_trend=pvalue_trend,  pvalue_interaction= pvalue_interaction, test_overdisp = test_overdisp, plot_KI = p2,  plot=p,
+                 conf_limit = conf_limit, lang = lang)
   class(output) <- "class_effectiveness"
   return(output)
 }
@@ -525,22 +537,36 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
                      "debolmente affidabile")
     measure <- "Effetto delle misure"
   }
-  if(is.na(object$pvalue_measure))
-  {
-    k <- 1
-  } else if(object$pvalue_measure <= 0.01 && object$pvalue_measure >= 0)
-  {
-    k<- 2
-  } else if (object$pvalue_measure > 0.01 && object$pvalue_measure <= 0.05)
-  {
-    k <- 3
-  } else if (object$pvalue_measure > 0.05 && object$pvalue_measure <= 0.10)
-  {
-    k <- 4
-  } else k <- 1
+  if (is.na(object$conf_limit)){
+    if(is.na(object$pvalue_measure))
+    {
+      k <- 1
+    } else if(object$pvalue_measure <= 0.01 && object$pvalue_measure >= 0)
+    {
+      k<- 2
+    } else if (object$pvalue_measure > 0.01 && object$pvalue_measure <= 0.05)
+    {
+      k <- 3
+    } else if (object$pvalue_measure > 0.05 && object$pvalue_measure <= 0.10)
+    {
+      k <- 4
+    } else k <- 1
+  }
+  if (!is.na(object$conf_limit)){
+    if(object$conf_limit <= 99 | object$conf_limit == "> 99.99")
+    {
+      k<- 2
+    } else if (object$pvalue_measure > 99 && object$pvalue_measure <= 95)
+    {
+      k <- 3
+    } else if (object$pvalue_measure > 95 && object$pvalue_measure <= 90)
+    {
+      k <- 4
+    } else k <- 1
+  }
   print(object$plot)
   cat(modelname[min_model])
-  if (min_model==1 & !is.na(object$pvalue_interaction)) cat("\n", paste0(measure,": ", object$pvalue_measure))
+  if (min_model==1 & !is.na(object$pvalue_interaction)) cat("\n", paste0(measure,": ", "> 99.99", "(",object$pvalue_measure, ")"))
   if (!(min_model==1 & !is.na(object$pvalue_interaction))) cat("\n", paste0(measure,": ", reliability[k]))
   cat("\n")
 }
