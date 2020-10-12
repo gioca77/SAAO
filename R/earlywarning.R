@@ -5,10 +5,11 @@
 #' @param from from which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
 #' @param n number of simulations
-#' @param conf.level level of the prediction interval
+#' @param pred.level level of the prediction interva, if NULL (default) an interval with return periods is constructed
 #' @param main optional title for the plot
 #' @param x_axis optional vector with the values for the x-axis
 #' @param max_y optional maximum value for the y-axis
+#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced.
 #' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
 #' @param lang language for output ("en", "fr", "de" or "it")
 #' @export
@@ -34,9 +35,9 @@
 #'   summary(ex7)
 
 
-earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 1000,
-                         conf.level = 0.9, main = NULL,  x_axis = NULL, max_y = NULL,
-                         orientation_x = NULL, lang = "en") {
+earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 10000,
+                         pred.level = NULL, main = NULL,  x_axis = NULL, max_y = NULL,
+                         add_exp = FALSE, orientation_x = NULL, lang = "en") {
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
@@ -70,6 +71,10 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       warning('For orientation_x only "v" or "h" are allowed')
     }
   }
+  if (is.null(add_exp) || !(add_exp %in% c(TRUE, FALSE))){
+    add_exp <- FALSE
+    warning('For add_exp only TRUE and FALSE are allowed. Set to FALSE')
+  }
   Check <- newArgCheck_sep()
   #* accidents format
   if (is(accidents)[1]==  "try-error")
@@ -100,20 +105,19 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   if (is(from)[1]==  "try-error")
     addError_sep(
       msg = "wrong time format for 'from'",
-      argcheck = Check
-    )
+      argcheck = Check)
   #* until time format
   if (is(until)[1]==  "try-error")
     addError_sep(
       msg = "wrong time format for 'until'",
-      argcheck = Check
-    )
-  #* conf.level format
-  if (conf.level<0 | conf.level>1)
-    addError_sep(
-      msg = "'conf.level' must be between 0 and 1",
-      argcheck = Check
-    )
+      argcheck = Check)
+  #* pred.level format
+  if (!is.null(pred.level)){
+    if (pred.level<0 | pred.level>1)
+      addError_sep(
+        msg = "'pred.level' must be between 0 and 1",
+        argcheck = Check)
+    }
   #* check until > from
   if (is(from)[1]=="Date" & is(until)[1]=="Date"){
     if (from > until)
@@ -127,9 +131,9 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
   if(from > until) stop("until has to be greater then from")
-  timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(until, '%Y'))),"-",
-                              format(until+1, '%m-%d')))
-  if (from[1]>timeserie[1]) timeserie <- timeserie[-1]
+  timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric(format(until + 1, '%Y'))),"-",
+                              format(until + 1, '%m-%d')))
+  if (from[1] > timeserie[1]) timeserie <- timeserie[-1]
   if (length(timeserie)<4){
     stop("time series too short (less than 4 years)")
   }
@@ -207,26 +211,47 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   {
     y_int <- rpois(n, lambda = exp(samp))
   }
-  lp <- (1 - conf.level) / 2
-  up <- 1 - lp
-  ci <- quantile(y_int, c(lp, up), na.rm=TRUE)
+  if (!is.null(pred.level)){
+    lp <- (1 - pred.level) / 2
+    up <- 1 - lp
+    ci <- as.data.frame(matrix(quantile(y_int, c(lp, up), na.rm=TRUE),  nrow=1))
+  }
+  if (is.null(pred.level)){
+    ci <- as.data.frame(matrix(data=quantile(y_int, c(0.005, 0.995, 0.025, 0.975,0.05, 0.95, 0.1, 0.9), na.rm=TRUE), nrow=4, byrow=T))
+  }
+  colnames(ci)[1:2] <- c("min", "max")
+  ci$Date <- dat_model[dim(dat_model)[1], "Date"]
+  ci$level <- factor(dim(ci)[1]:1, levels = 1:dim(ci)[1])
+  ci$size <- c(1, 1.2, 1.4, 1.6)[1:dim(ci)[1]]
   dat_fit <- NULL
   preds <- predict(fit, type= "link", se.fit = TRUE)
   dat_fit <- data.frame(Date = fit$model$Date,
                         expect = exp(preds$fit),
                         low = exp(preds$fit-qnorm(0.975)*preds$se.fit),
                         upp = exp(preds$fit+qnorm(0.975)*preds$se.fit))
+
+  if(sum(dat_fit$upp != Inf) != 0){
+    return_period <- 1/(sum(y_int>=dat_model[dim(dat_model)[1], "accidents"], na.rm=TRUE)/n)
+    if(return_period==Inf) return_period <- paste(">", 1/(1/n))
+  }
   if(sum(dat_fit$upp != Inf) == 0){
     faelle <- dim(dat_fit)[1]
     q_Jahr <- 0.05^{1/faelle}
     lambda_est <- -log(q_Jahr)
     dat_fit$upp <- lambda_est
-    ci <- c(0, qpois(conf.level, lambda_est)) ## Allenfalls 90?
+    if (!is.null(pred.level)){
+      ci[1, 1:2] <- c(0, qpois(pred.level, lambda_est))
+    }
+    if (is.null(pred.level)){
+      ci[, 1:2] <- as.data.frame(matrix(data=qpois(c(0.005, 0.995, 0.025, 0.975,0.05, 0.95, 0.1, 0.9), lambda_est), nrow=4, byrow=T))
+    }
+    return_period <- 1/(1-ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
+    if(return_period > 1/(1/n)) return_period <- paste(">", 1/(1/n))
     warning(paste0("Since all values are 0, the prediction interval cannot be determined by simulation. Estimation by ",
-                   conf.level, " quantile of the Poisson distribution."))
+                   pred.level, " quantile of the Poisson distribution."))
   }
   dat_total <- merge(x=dat_model, y=dat_fit, by="Date", all=TRUE)
-  col_w <- ifelse(dat_total[dat_total$Date==max(dat_total$Date),"accidents"]>ci[2], "red", "black")
+  col_w <- ifelse(dat_total[dat_total$Date==max(dat_total$Date),"accidents"] > ci[1,2], "red", "black")
   # Base plot
   if (is.null(orientation_x)) orientation_x <- ifelse(diff(as.numeric(format(range(dat_total$Date), '%Y'))) > 8, "v", "h")
   if (is.null(x_axis)) x_axis <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric(format(until, '%Y'))+1), "-01-01"))
@@ -238,18 +263,19 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   }
   if (is.null(exposition)){
     if (is.null(max_y)){
-      max_data <- c(dat_total$accidents, dat_total$expect, dat_total$low, dat_total$upp, ci)
+      max_data <- c(dat_total$accidents, dat_total$expect, dat_total$low, dat_total$upp, ci$max)
       max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
     }
-    p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents)) +
+     p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_ribbon(ggplot2::aes(ymin=low,ymax=upp), fill="grey", alpha=0.5) +
       ggplot2::geom_line() +
       ggplot2::geom_point()  +
-      ggplot2::geom_segment(ggplot2::aes(y = ci[1],
-                                         x = max(Date), yend=ci[2],
-                                         xend=max(Date)), col="blue") +
+      ggplot2::geom_segment(data=ci, ggplot2::aes(y = min,
+                                         x = Date, yend=max,
+                                         xend=Date, col=level), size=ci$size) +
+      ggplot2::geom_line() +
       ggplot2::geom_point(data=dat_total[dat_total$Date == max(dat_total$Date),],
                           ggplot2::aes(x = Date, y = accidents), col= col_w) +
       ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
@@ -257,17 +283,13 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
       ggplot2::ggtitle(main) +
       ggplot2::theme_bw()
-    if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
-    if (lang == "de") p <- p + ggplot2::ylab("Unfaelle")
-    if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
   }
   if (!is.null(exposition)){
     if (is.null(max_y)){
       max_data <- c(dat_total$accidents/dat_total$Exp, dat_total$expect/dat_total$Exp, dat_total$low/dat_total$Exp, dat_total$upp/dat_total$Exp,
-                    ci/dat_model$Exp[length(dat_model$Exp)])
+                    ci$max/dat_model$Exp[length(dat_model$Exp)])
       max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
     }
-
     scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
     p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents / Exp* scal)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
@@ -276,27 +298,84 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
                            fill="grey", alpha=0.5) +
       ggplot2::geom_line() +
       ggplot2::geom_point()  +
-      ggplot2::geom_segment(ggplot2::aes(y = ci[1]  / dat_model$Exp[length(dat_model$Exp)] * scal,
-                                         x = max(Date),
-                                         yend=ci[2] / dat_model$Exp[length(dat_model$Exp)] * scal,
-                                         xend=max(Date)), col="blue") +
+      ggplot2::geom_segment(data=ci, ggplot2::aes(y = min/ dat_model$Exp[length(dat_model$Exp)] * scal,
+                                                  x = Date, yend=max/ dat_model$Exp[length(dat_model$Exp)] * scal,
+                                                  xend=Date, col=level), size=ci$size) +
+      ggplot2::geom_line() +
       ggplot2::geom_point(data=dat_total[dat_total$Date == max(dat_total$Date),],
                           ggplot2::aes(x = Date, y = accidents / Exp* scal),
                           col= col_w) +
-      ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
-                                  expand = c(0, 0), limits = c(0, max_y*scal))+
       ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
       ggplot2::ggtitle(main) +
       ggplot2::theme_bw()
-    if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
+    if (!add_exp) p <- p + ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                                       expand = c(0, 0), limits = c(0, max_y*scal))
     if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "de") p <- p + ggplot2::ylab(paste("Unfallrate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))
     if (lang == "it") p <- p + ggplot2::ylab(paste("Tasso di incidenti *", formatC(scal, format = "e", digits = 0)))
+    if (add_exp){
+      scal_acci <- ceiling(max(dat_total$Exp)/(max_y*scal))
+      p <- p+ggplot2::geom_point(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
+        ggplot2::geom_line(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
+        ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                    expand = c(0, 0), limits = c(0, max_y * scal),
+                                    sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1, name="exposition"))
+      p2 <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=Exp)) +
+        ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
+        ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
+        ggplot2::geom_line() +
+        ggplot2::geom_point()  +
+        ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                    expand = c(0, 0), limits = c(0, max(dat_total$Exp, na.rm = TRUE)*1.1))+
+        ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
+        ggplot2::ggtitle(main) +
+        ggplot2::ylab("exposition") +
+        ggplot2::theme_bw()
+      if (orientation_x == "v")  p2 <- p2 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
+      if (lang == "de") p2 <- p2 + ggplot2::ylab("Exposition")
+    }
   }
+  if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
+  if (lang == "en" & is.null(pred.level)) p <- p +
+    ggplot2::scale_color_manual(name = "Return period",
+                                values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
+                                labels = c("5-year event", "10-year event", "20-year event", "100-year event"))
+  if (lang == "en" & !is.null(pred.level)) p <- p +
+    ggplot2::scale_color_manual(name = "",
+                                values = c("1"="orange"),
+                                labels = paste0(pred.level*100, "% prediction interval"))
+  if (lang == "de" & is.null(pred.level)) p <- p + ggplot2::ylab("Unfaelle")+
+    ggplot2::scale_color_manual(name = "Jaehrlichkeit",
+                                values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
+                                labels = c("5-jaehriges Ereignis", "10-jaehriges Ereignis", "20-jaehriges Ereignis", "100-jaehriges Ereignis"))
+  if (lang == "de" & !is.null(pred.level)) p <- p +
+    ggplot2::scale_color_manual(name = "",
+                                values = c("1"="orange"),
+                                labels = paste0(pred.level*100, "% intervalle de fluctuation"))
+  if (lang == "fr" & is.null(pred.level)) p <- p +
+    ggplot2::scale_color_manual(name = "Periode de retour",
+                                values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
+                                labels = c("evenement 5 ans", "evenement 10 ans", "venement 20 ans",  "evenement 100 ans"))
+  if (lang == "fr" & !is.null(pred.level)) p <- p +
+    ggplot2::scale_color_manual(name = "",
+                                values = c("1"="orange"),
+                                labels = paste0(pred.level*100, "% intervalle de fluctuation"))
+
+  if (lang == "it" & is.null(pred.level)) p <- p + ggplot2::ylab("Incidenti") +
+    ggplot2::scale_color_manual(name = "Tempo di ritorno",
+                                values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
+                                labels = c("evento dei 5 anni", "evento dei 10 anni", "evento dei 20 anni", "evento dei 100 anni"))
+  if (lang == "it" & !is.null(pred.level)) p <- p +
+    ggplot2::scale_color_manual(name = "",
+                                values = c("1"="orange"),
+                                labels = paste0(pred.level*100, "% intervallo di previsione"))
   if (lang == "de") p <- p + ggplot2::xlab("Datum")
   if (lang == "it") p <- p + ggplot2::xlab("Data")
-  output <- list( ci = ci, data = dat_total, fit=fit, test_overdisp = test_overdisp, plot = p, lang = lang)
+  if (!add_exp) output <- list( ci = ci[,1:2], data = dat_total, fit = fit, test_overdisp = test_overdisp, plot = p,
+                                pred.level = pred.level, lang = lang, return_period = return_period)
+  if (add_exp) output <- list( ci = ci[,1:2], data = dat_total, fit = fit, test_overdisp = test_overdisp, plot = p,
+                               pred.level = pred.level, lang = lang, return_period = return_period, plot_exposition = p2)
   class(output) <- "class_earlywarning"
   return(output)
 }
@@ -311,53 +390,63 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   {
     stop("Not a earlywarning object")
   }
+  rp_w <- ifelse(is.numeric(object$return_period), round(object$return_period, 0), object$return_period)
   if (object$lang == "en"){
     striking <- "striking"
     nstriking <- "not striking"
-    ci <- "Confidence_interval"
+    ci <- "Prognoseintervall"
     model <- "model"
     nb <- "Negative binomial"
     val <- "observation"
     pv <- "p-value"
-    od <- "overdispersion:"
+    od <- "overdispersion"
+    rp <- paste0(rp_w, "-year event")
   }
   if (object$lang == "de"){
     striking <- "auffaellig"
     nstriking <- "nicht auffaellig"
-    ci <- "Konfidenzintervall"
+    ci <- "prediction interval"
     model <- "Modell"
     nb <- "Negative Binomial"
     val <- "Beobachtung"
     pv <- "p-Wert"
     od <- "Overdispersion"
+    rp <- paste0(rp_w, "-jaehriges Ereignis")
   }
   if (object$lang == "fr"){
     striking <- "remarquable"
     nstriking <- "non remarquable"
-    ci <- "Intervalle de confiance"
+    ci <- "intervalle de fluctuation"
     model <- "model"
     nb <- "binomiale negative"
     val <- "observation"
     pv <- "valeur p"
     od <- "overdispersion"
+    rp <- paste0("evenement ", rp_w, " ans")
   }
   if (object$lang == "it"){
     striking <- "remarquable"
     nstriking <- "non remarquable"
-    ci <- "Intervallo di confidenza"
+    ci <- "intervallo di previsione"
     model <- "modello"
     nb <- " binomiale negativa"
     val <- "osservazione"
     pv <- "Valore p"
     od <- "overdispersion"
+    rp <- paste0("evento dei ", rp_w, " anni")
   }
   print(object$plot)
-  if (object$data[dim(object$data)[1],2] >= as.numeric(object$ci)[1] && object$data[dim(object$data)[1],2] <=as.numeric(object$ci)[2]){
-    cat(paste0(nstriking, " (", ci," ", round(as.numeric(object$ci)[1],2), "-", round(as.numeric(object$ci)[2],2), "; ",
-             val, ": ", object$data[dim(object$data)[1],2], ")"))
-  } else {
-    cat(paste0(striking, " (", ci," ", as.numeric(object$ci)[1], "-", as.numeric(object$ci)[2], "; ",
+  if (is.null(object$pred.level)){
+    cat(rp)
+  }
+  if (!is.null(object$pred.level)){
+    if (object$data[dim(object$data)[1],2] >= object$ci[1,1] && object$data[dim(object$data)[1],2] <= object$ci[1,2]){
+      cat(paste0(nstriking, " (", object$pred.level*100, "%-", ci," ", round(object$ci[1,1],2), "-", round(object$ci[1, 2],2), "; ",
+                 val, ": ", object$data[dim(object$data)[1],2], ")"))
+      } else {
+        cat(paste0(striking, " (", object$pred.level*100, "%-", ci," ", object$ci[1,1], "-", object$ci[1,2], "; ",
                val, ": ", object$data[dim(object$data)[1],2], ")"))
+      }
   }
   if (!is.null(object$fit$theta))
   {

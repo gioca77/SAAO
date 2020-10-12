@@ -157,9 +157,9 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   if (from > measure_start) stop("measure_start has to be after from")
   if (until < measure_end) stop("measure_end has to be before until")
   before <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(measure_start, '%Y'))),"-", format(measure_start, '%m-%d')))
-  if (from>before[1]) before <- before[-1]
+  if (from > before[1]) before <- before[-1]
   after <- as.Date(paste0(as.numeric(format(measure_end, '%Y')):as.numeric( format(until+1, '%Y')),"-", format(measure_end, '%m-%d')))
-  if (until+1<after[length(after)]) after <- after[-length(after)]
+  if ((until + 1) < after[length(after)]) after <- after[-length(after)]
   ## generate data for model
   dat_before <- as.data.frame(matrix(NA, nrow=length(before)-1, ncol=2))
   if (dim(dat_before)[1]==0) stop("timeserie before measure start not long enough")

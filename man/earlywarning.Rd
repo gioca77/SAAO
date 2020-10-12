@@ -9,11 +9,12 @@ earlywarning(
   exposition = NULL,
   from = NULL,
   until = NULL,
-  n = 1000,
-  conf.level = 0.9,
+  n = 10000,
+  pred.level = NULL,
   main = NULL,
   x_axis = NULL,
   max_y = NULL,
+  add_exp = FALSE,
   orientation_x = NULL,
   lang = "en"
 )
@@ -29,13 +30,15 @@ earlywarning(
 
 \item{n}{number of simulations}
 
-\item{conf.level}{level of the prediction interval}
+\item{pred.level}{level of the prediction interva, if NULL (default) an interval with return periods is constructed}
 
 \item{main}{optional title for the plot}
 
 \item{x_axis}{optional vector with the values for the x-axis}
 
 \item{max_y}{optional maximum value for the y-axis}
+
+\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced.}
 
 \item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical}
 

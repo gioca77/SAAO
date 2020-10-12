@@ -9,6 +9,7 @@
 #' @param main optional title for the plot
 #' @param x_axis optional vector with the values for the x-axis
 #' @param max_y optional maximum value for the y-axis
+#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced.
 #' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
 #' @param lang language for output ("en", "fr", "de" or "it")
 #' @export
@@ -36,7 +37,7 @@
 timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until = NULL,
                                pearson_line = TRUE, show_outliers = FALSE,
                                main = NULL, max_y = NULL, x_axis = NULL,
-                               orientation_x = NULL, lang = "en"){
+                               add_exp = FALSE, orientation_x = NULL, lang = "en"){
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent=silent)
@@ -120,7 +121,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
   if(from > until) stop("until has to be greater then from")
-  timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(until, '%Y'))),"-", format(until+1, '%m-%d')))
+  timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(until + 1, '%Y'))),"-", format(until + 1, '%m-%d')))
   if (from[1]>timeserie[1]) timeserie <- timeserie[-1]
   if (length(timeserie)<3){
     stop("time series too short (less than 3 years)")
@@ -276,23 +277,46 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       ggplot2::geom_point(ggplot2::aes(colour=col)) +
       ggplot2::scale_colour_manual(values = c("black", "orange", "red"), guide = FALSE) +
       ggplot2::geom_line(ggplot2::aes(y=expect/Exp* scal), col="blue")+
-      ggplot2::scale_y_continuous(breaks =  scales::pretty_breaks(), expand = c(0, 0), limits=c(0,max_y*scal))+
       ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
       ggplot2::ggtitle(main)+
       ggplot2::theme_bw()
+    if (!add_exp) p <- p + ggplot2::scale_y_continuous(breaks =  scales::pretty_breaks(), expand = c(0, 0), limits=c(0,max_y*scal))
     if (pearson_line) p <- p + ggplot2::geom_line(ggplot2::aes(x=Date, y=pearson_line/Exp* scal), linetype=2, colour="orange")
     if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "de") p <- p + ggplot2::ylab(paste("Unfallrate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))
     if (lang == "it") p <- p + ggplot2::ylab(paste("Tasso di incidenti *", formatC(scal, format = "e", digits = 0)))
+    if (add_exp){
+      scal_acci <- ceiling(max(dat_model$Exp)/(max_y*scal))
+      p <- p+ggplot2::geom_point(data=dat_model, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
+        ggplot2::geom_line(data=dat_model, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
+        ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                    expand = c(0, 0), limits = c(0, max_y * scal),
+                                    sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1, name="exposition"))
+      p2 <- ggplot2::ggplot(dat_model,  ggplot2::aes(x=Date, y=Exp)) +
+        ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
+        ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
+        ggplot2::geom_line() +
+        ggplot2::geom_point()  +
+        ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                    expand = c(0, 0), limits = c(0, max(dat_model$Exp, na.rm = TRUE)*1.1))+
+        ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
+        ggplot2::ggtitle(main) +
+        ggplot2::ylab("exposition") +
+        ggplot2::theme_bw()
+      if (orientation_x == "v")  p2 <- p2 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
+      if (lang == "de") p2 <- p2 + ggplot2::ylab("Exposition")
+    }
   }
   trend <- as.numeric((exp(summary(fit)$coefficients["Date", 1])-1) * difftime(until, from, units="day") / dim(dat_model)[1])
   p_value_trend <- summary(fit)$coefficients["Date", 4]
   if (lang == "de") p <- p + ggplot2::xlab("Datum")
   if (lang == "it") p <- p + ggplot2::xlab("Data")
-  output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
-                 test_overdisp = test_overdisp, plot= p, lang = lang)
+  if (!add_exp) output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
+                               test_overdisp = test_overdisp, plot= p, lang = lang)
+  if (add_exp) output <- output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
+                                        test_overdisp = test_overdisp, plot= p, lang = lang, plot_exposition = p2)
   class(output) <- "class_timeseriesanalyis"
   return(output)
 }
