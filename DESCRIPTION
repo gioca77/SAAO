@@ -12,6 +12,7 @@ Description: The package offers simple, automated tools for the statistical
 Depends: R (>= 3.6.1)
 Imports:
     ggplot2,
+	gridExtra,
     MASS (>= 7.3.51.6),
 	methods,
 	scales (>= 1.1.1),

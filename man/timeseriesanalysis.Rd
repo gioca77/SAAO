@@ -14,17 +14,17 @@ timeseriesanalysis(
   main = NULL,
   max_y = NULL,
   x_axis = NULL,
-  add_exp = FALSE,
   orientation_x = NULL,
+  add_exp = FALSE,
   lang = "en"
 )
 }
 \arguments{
-\item{accidents}{either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
+\item{accidents}{Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
 
-\item{exposition}{optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
+\item{exposition}{Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
 
-\item{from}{from which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
+\item{from}{From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
 
 \item{until}{Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
 
@@ -32,17 +32,17 @@ timeseriesanalysis(
 
 \item{show_outliers}{FALSE/TRUE if outliers with Pearson residual greater than 2 should be highlighted in color}
 
-\item{main}{optional title for the plot}
+\item{main}{Optional title for the plot}
 
-\item{max_y}{optional maximum value for the y-axis}
+\item{max_y}{Optional maximum value for the y-axis}
 
-\item{x_axis}{optional vector with the values for the x-axis}
-
-\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced.}
+\item{x_axis}{Optional vector with the values for the x-axis}
 
 \item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical}
 
-\item{lang}{language for output ("en", "fr", "de" or "it")}
+\item{add_exp}{FALSE/TRUE-option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.}
+
+\item{lang}{Language for output ("en", "fr", "de" or "it")}
 }
 \description{
 Function to evaluate the trend in accident time series
@@ -65,6 +65,8 @@ Function to evaluate the trend in accident time series
   plot(ex5)
   ex6 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex2)
   print(ex6)
-  ex7 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex3)
+  ex7 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex3, add_exp = TRUE)
   summary(ex7)
+  plot(ex7)
+  plot(ex7$plot_exposition)
 }

@@ -1,17 +1,17 @@
 #' Function to determine the prediction interval for new value in time series
 #'
-#' @param accidents either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
-#' @param exposition optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
-#' @param from from which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
+#' @param accidents Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
+#' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
+#' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
-#' @param n number of simulations
-#' @param pred.level level of the prediction interva, if NULL (default) an interval with return periods is constructed
-#' @param main optional title for the plot
-#' @param x_axis optional vector with the values for the x-axis
-#' @param max_y optional maximum value for the y-axis
-#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced.
-#' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
-#' @param lang language for output ("en", "fr", "de" or "it")
+#' @param n Number of simulations
+#' @param pred.level Level of the prediction interval, if NULL (default) an interval with return periods is constructed
+#' @param main Optional title for the plot
+#' @param x_axis Optional vector with the values for the x-axis
+#' @param max_y Optional maximum value for the y-axis
+#' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical.
+#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.
+#' @param lang Language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
 #'   ex1 <- earlywarning(accidents = example1_timeserie)
@@ -29,15 +29,15 @@
 #'   summary(ex4)
 #'   ex5 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex1)
 #'   plot(ex5)
-#'   ex6 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex2)
+#'   ex6 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex2, add_exp = TRUE)
 #'   print(ex6)
+#'   plot(ex6$plot_exposition)
 #'   ex7 <- earlywarning(accidents = example3_timeserie, exposition=exposition_ex3)
 #'   summary(ex7)
 
-
 earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 10000,
                          pred.level = NULL, main = NULL,  x_axis = NULL, max_y = NULL,
-                         add_exp = FALSE, orientation_x = NULL, lang = "en") {
+                         orientation_x = NULL, add_exp = FALSE, lang = "en") {
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
@@ -315,7 +315,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))
     if (lang == "it") p <- p + ggplot2::ylab(paste("Tasso di incidenti *", formatC(scal, format = "e", digits = 0)))
     if (add_exp){
-      scal_acci <- ceiling(max(dat_total$Exp)/(max_y*scal))
+      scal_acci <- ceiling(max(dat_total$Exp)/(max_y*scal)) * 1.05
       p <- p+ggplot2::geom_point(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
         ggplot2::geom_line(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
         ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
@@ -372,10 +372,10 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
                                 labels = paste0(pred.level*100, "% intervallo di previsione"))
   if (lang == "de") p <- p + ggplot2::xlab("Datum")
   if (lang == "it") p <- p + ggplot2::xlab("Data")
-  if (!add_exp) output <- list( ci = ci[,1:2], data = dat_total, fit = fit, test_overdisp = test_overdisp, plot = p,
-                                pred.level = pred.level, lang = lang, return_period = return_period)
-  if (add_exp) output <- list( ci = ci[,1:2], data = dat_total, fit = fit, test_overdisp = test_overdisp, plot = p,
-                               pred.level = pred.level, lang = lang, return_period = return_period, plot_exposition = p2)
+  if (!add_exp | is.null(exposition)) output <- list( ci = ci[,1:2], data = dat_total, fit = fit, test_overdisp = test_overdisp, plot = p,
+                                                      pred.level = pred.level, lang = lang, return_period = return_period)
+  if (add_exp & !is.null(exposition)) output <- list( ci = ci[,1:2], data = dat_total, fit = fit, test_overdisp = test_overdisp, plot = p,
+                                                      pred.level = pred.level, lang = lang, return_period = return_period, plot_exposition = p2)
   class(output) <- "class_earlywarning"
   return(output)
 }

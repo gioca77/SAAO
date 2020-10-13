@@ -1,17 +1,17 @@
 #' Function to evaluate the trend in accident time series
 #'
-#' @param accidents either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
-#' @param exposition optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
-#' @param from from which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
+#' @param accidents Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
+#' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
+#' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
 #' @param pearson_line TRUE/FALSE if line for pearson residual equal 2 should be drawn or not
 #' @param show_outliers FALSE/TRUE if outliers with Pearson residual greater than 2 should be highlighted in color
-#' @param main optional title for the plot
-#' @param x_axis optional vector with the values for the x-axis
-#' @param max_y optional maximum value for the y-axis
-#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced.
+#' @param main Optional title for the plot
+#' @param x_axis Optional vector with the values for the x-axis
+#' @param max_y Optional maximum value for the y-axis
 #' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
-#' @param lang language for output ("en", "fr", "de" or "it")
+#' @param add_exp FALSE/TRUE-option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.
+#' @param lang Language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
 #'   ex1 <- timeseriesanalysis(accidents = example1_timeserie)
@@ -31,13 +31,15 @@
 #'   plot(ex5)
 #'   ex6 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex2)
 #'   print(ex6)
-#'   ex7 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex3)
+#'   ex7 <- timeseriesanalysis(accidents = example1_timeserie, exposition=exposition_ex3, add_exp = TRUE)
 #'   summary(ex7)
+#'   plot(ex7)
+#'   plot(ex7$plot_exposition)
 
 timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until = NULL,
                                pearson_line = TRUE, show_outliers = FALSE,
                                main = NULL, max_y = NULL, x_axis = NULL,
-                               add_exp = FALSE, orientation_x = NULL, lang = "en"){
+                               orientation_x = NULL, add_exp = FALSE,  lang = "en"){
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent=silent)
@@ -288,7 +290,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))
     if (lang == "it") p <- p + ggplot2::ylab(paste("Tasso di incidenti *", formatC(scal, format = "e", digits = 0)))
     if (add_exp){
-      scal_acci <- ceiling(max(dat_model$Exp)/(max_y*scal))
+      scal_acci <- ceiling(max(dat_model$Exp)/(max_y*scal)) * 1.05
       p <- p+ggplot2::geom_point(data=dat_model, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
         ggplot2::geom_line(data=dat_model, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
         ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
@@ -313,10 +315,10 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   p_value_trend <- summary(fit)$coefficients["Date", 4]
   if (lang == "de") p <- p + ggplot2::xlab("Datum")
   if (lang == "it") p <- p + ggplot2::xlab("Data")
-  if (!add_exp) output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
-                               test_overdisp = test_overdisp, plot= p, lang = lang)
-  if (add_exp) output <- output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
-                                        test_overdisp = test_overdisp, plot= p, lang = lang, plot_exposition = p2)
+  if (!add_exp | is.null(exposition)) output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
+                                                     test_overdisp = test_overdisp, plot= p, lang = lang)
+  if (add_exp & !is.null(exposition)) output <- output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
+                                                               test_overdisp = test_overdisp, plot= p, lang = lang, plot_exposition = p2)
   class(output) <- "class_timeseriesanalyis"
   return(output)
 }
@@ -425,4 +427,3 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
              p_value_test_overdispersion = object$test_overdisp)
   sum_output
 }
-

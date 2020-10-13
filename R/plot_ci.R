@@ -1,6 +1,6 @@
 #' Function to directly plot confidence interval of measure
 #'
-#' @param object output of effectiveness-Function
+#' @param object output of effectiveness-Function or effectiveness_multi-Function
 #' @export
 #' @examples
 #'   # example
@@ -8,7 +8,7 @@
 #'   # plot_ci(ex)
 plot_ci <- function(object)
 {
-  if (!inherits(object, "class_effectiveness"))
+  if (!inherits(object, "class_effectiveness") && !inherits(object, "class_effectiveness_multi"))
   {
     stop("Not a effectiveness object")
   }

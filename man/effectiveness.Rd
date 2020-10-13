@@ -13,37 +13,39 @@ effectiveness(
   until = NULL,
   main = NULL,
   x_axis = NULL,
-  y_axis = NULL,
   max_y = NULL,
   orientation_x = NULL,
+  add_exp = FALSE,
   KI_plot = TRUE,
   lang = "en"
 )
 }
 \arguments{
-\item{accidents}{either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
+\item{accidents}{Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
 
-\item{measure_start}{at which data the implementation of measure started (e.g. character '22.4.2014' or R date/time)}
+\item{measure_start}{At which data the implementation of measure started (e.g. character '22.4.2014' or R date/time)}
 
-\item{measure_end}{at which data the implementation of the measure was finished (respectively first day after the measure)}
+\item{measure_end}{At which data the implementation of the measure was finished (respectively first day after the measure)}
 
-\item{exposition}{optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
+\item{exposition}{Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
 
-\item{from}{from which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
+\item{from}{From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
 
 \item{until}{Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
 
-\item{main}{optional title for the plot}
+\item{main}{Optional title for the plot.}
 
-\item{x_axis}{optional vector with the values for the x-axis}
+\item{x_axis}{Optional vector with the values for the x-axis}
 
-\item{max_y}{optional maximum value for the y-axis}
+\item{max_y}{Optional maximum value for the y-axis}
 
 \item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical}
 
+\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.}
+
 \item{KI_plot}{TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)}
 
-\item{lang}{language for output ("en", "fr", "de" or "it")}
+\item{lang}{Language for output ("en", "fr", "de" or "it")}
 }
 \description{
 Function to evaluate the effectiveness of measures
@@ -71,4 +73,7 @@ model is displayed. The exposure can optionally be considered as an offset.
   ex7 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1, lang = "de")
   summary(ex7)
   plot(ex7)
+  ex8 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2012', measure_end = '1.4.2012', exposition = exposition_ex2, add_exp = TRUE)
+  plot(ex8)
+  plot(ex8$plot_exposition)
 }

@@ -4,18 +4,19 @@
 #' Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the #' measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. #' However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched #' to a Negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: #' no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best
 #' model is displayed. The exposure can optionally be considered as an offset.
 #'
-#' @param accidents either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
-#' @param measure_start at which data the implementation of measure started (e.g. character '22.4.2014' or R date/time)
-#' @param measure_end at which data the implementation of the measure was finished (respectively first day after the measure)
-#' @param exposition optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
-#' @param from from which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
+#' @param accidents Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
+#' @param measure_start At which data the implementation of measure started (e.g. character '22.4.2014' or R date/time)
+#' @param measure_end At which data the implementation of the measure was finished (respectively first day after the measure)
+#' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
+#' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
-#' @param main optional title for the plot
-#' @param x_axis optional vector with the values for the x-axis
-#' @param max_y optional maximum value for the y-axis
+#' @param main Optional title for the plot.
+#' @param x_axis Optional vector with the values for the x-axis
+#' @param max_y Optional maximum value for the y-axis
 #' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
-#' @param lang language for output ("en", "fr", "de" or "it")
+#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.
 #' @param KI_plot TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)
+#' @param lang Language for output ("en", "fr", "de" or "it")
 #' @export
 #' @examples
 #'   ex1 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
@@ -36,11 +37,14 @@
 #'   ex7 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1, lang = "de")
 #'   summary(ex7)
 #'   plot(ex7)
+#'   ex8 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2012', measure_end = '1.4.2012', exposition = exposition_ex2, add_exp = TRUE)
+#'   plot(ex8)
+#'   plot(ex8$plot_exposition)
 
 
 effectiveness <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL,
-                          until = NULL, main = NULL, x_axis = NULL,
-                          y_axis = NULL, max_y = NULL, orientation_x = NULL, KI_plot = TRUE,  lang = "en"){
+                          until = NULL, main = NULL, x_axis = NULL, max_y = NULL,
+                          orientation_x = NULL, add_exp = FALSE, KI_plot = TRUE,  lang = "en"){
   ## internal parameters
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   intervalle <- c(seq(0.01,0.99,0.01),0.991,0.992,0.993,0.994, 0.995, 0.996, 0.997, 0.998, 0.999, 0.9999) #Confidence intervals taken into account
@@ -82,6 +86,10 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       warning('For orientation_x only "v" or "h" are allowed')
     }
   }
+  if (is.null(add_exp) || !(add_exp %in% c(TRUE, FALSE))){
+    add_exp <- FALSE
+    warning('For add_exp only TRUE and FALSE are allowed. Set to FALSE')
+  }
   Check <- newArgCheck_sep()
   #* accidents format
   if (is(accidents)[1] ==  "try-error")
@@ -92,13 +100,13 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   #* measure_start format
   if (is(measure_start)[1] ==  "try-error")
     addError_sep(
-      msg = "'wrong time format for 'measure_start'",
+      msg = "wrong time format for 'measure_start'",
       argcheck = Check
     )
   #* measure_end format
   if (is(measure_end)[1] ==  "try-error")
     addError_sep(
-      msg = "'wrong time format for 'measure_end'",
+      msg = "wrong time format for 'measure_end'",
       argcheck = Check
     )
   #* exposition format
@@ -123,32 +131,27 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   #* from time format
   if (is(from)[1] ==  "try-error")
     addError_sep(
-      msg = "'wrong time format for 'from'",
+      msg = "wrong time format for 'from'",
       argcheck = Check
     )
   #* until time format
   if (is(until)[1] ==  "try-error")
     addError_sep(
-      msg = "'wrong time format for 'until'",
+      msg = "wrong time format for 'until",
       argcheck = Check
     )
   #* check until > from
   if (is(from)[1]=="Date" & is(until)[1]=="Date"){
     if (from > until)
-      addError_sep(msg = "'until has to be greater then from'",
-                   argcheck = Check)
+      addError_sep(msg = "'until' has to be greater then 'from'", argcheck = Check)
   }
   #* check measure_end >= measure_start
   if (is(measure_end)[1]=="Date" & is(measure_start)[1]=="Date"){
     if (measure_start > measure_end)
-      addError_sep(msg = "'measure_end has to be greater or equal then measure_start'",
-                   argcheck = Check)
+      addError_sep(msg = "'measure_end' has to be greater or equal then 'measure_start'", argcheck = Check)
   }
   #* Return errors and warnings (if any)
   finishArgCheck_sep(Check)
-  if (any(format(accidents, '%Y')<100)) warning('Check the time format. Only the following formats are supported: "%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"')
-  if (format(measure_start, '%Y')<100) warning('Check the time format of measure_start. Only the following formats are supported: "%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"')
-  if (format(measure_end, '%Y')<100) warning('Check the time format of measure_end. Only the following formats are supported: "%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y"')
   ## processing input
   measure_mean <- as.Date(mean(c(as.numeric(measure_start),as.numeric(measure_end))), origin="1970-01-01")
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
@@ -349,6 +352,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   ## visualization
   if (is.null(main)) main <- paste("measure", paste(measure_mean, collapse = ","), sep=" ")
   if (is.null(x_axis)) x_axis <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric(format(until, '%Y'))+1), "-01-01"))
+  year_format <- ifelse(measure_start>100, "%Y", "%y")
   # if (test_conf){
   if(sum(after_bor$upp[after_bor$measure=="after"] != Inf) == 0){
     faelle <- sum(after_bor$measure=="after")
@@ -375,7 +379,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=after_bor$Date, colour="darkgrey", linetype=2)+
       ggplot2::geom_ribbon(data=rbind(expect_before, expect_after), ggplot2::aes(ymin=low,ymax=upp), fill="grey", alpha=0.5)+
-      ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
+      ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format(year_format))+
       ggplot2::ggtitle(main)+
       ggplot2::theme_bw()
     before_bor$accidents=NA
@@ -400,21 +404,12 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       ggplot2::geom_line(data=dat_total[dat_total$Date<measure_mean,], ggplot2::aes(x=Date, y=accidents)) +
       ggplot2::geom_vline(xintercept=measure_end, colour="red")+
       ggplot2::geom_vline(xintercept=measure_start, colour="red")+
-      ggplot2::geom_point(x=mean(c(measure_end, measure_start)), y=during/measure_length, colour="grey", na.rm=TRUE)
-
+      ggplot2::geom_point(x=mean(c(measure_end, measure_start)), y=during/measure_length, colour="grey", na.rm=TRUE) +
+      ggplot2::scale_y_continuous(breaks=  scales::pretty_breaks())
     ## Connect the measured values after the measure, if there are enough measured values
     if (sum(dat_total$Date>measure_mean)>1){
       p <- p +
         ggplot2::geom_line(data=dat_total[dat_total$Date>measure_mean,], ggplot2::aes(x=Date, y=accidents))
-    }
-    ## customization
-    if (!is.null(y_axis)){
-      p <- p +
-        ggplot2::scale_y_continuous(breaks=y_axis, expand = c(0, 0), limits=range(y_axis))
-    }
-    if (is.null(y_axis)){
-      p <- p +
-        ggplot2::scale_y_continuous(breaks=  scales::pretty_breaks())
     }
     if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "de") p <- p + ggplot2::ylab("Unfaelle")
@@ -426,9 +421,9 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
     p <- ggplot2::ggplot(dat_total, ggplot2::aes(x=Date, y=accidents/Exp* scal)) +
       ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
-      ggplot2::geom_vline(xintercept=after_bor$Date, colour="darkgrey", linetype=2)+
+      ggplot2::geom_vline(xintercept=after_bor$Date, colour="darkgrey", linetype=2) +
       ggplot2::geom_ribbon(data=rbind(expect_before, expect_after), ggplot2::aes(ymin=low/Exp* scal,ymax=upp/Exp* scal), fill="grey", alpha=0.5)+
-      ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
+      ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format(year_format))+
       ggplot2::ylab(paste("accident rate *", formatC(scal, format = "e", digits = 0))) +
       ggplot2::ggtitle(main)+
       ggplot2::theme_bw()
@@ -453,20 +448,13 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       ggplot2::geom_vline(xintercept=measure_end, colour="red")+
       ggplot2::geom_vline(xintercept=measure_start, colour="red")+
       ggplot2::geom_point(x=mean(c(measure_end, measure_start)), y=during/measure_length/tab$Exp[round(tab$Date)==round(measure_mean)]*scal, colour="grey", na.rm=TRUE)
-
     ## Connect the measured values after the measure, if there are enough measured values
     if (sum(dat_total$Date>measure_mean)>1){
       p <- p +
         ggplot2::geom_line(data=dat_total[dat_total$Date>measure_mean,], ggplot2::aes(x=Date, y=accidents/Exp* scal))
     }
-    ## customization
-    if (!is.null(y_axis)){
-      p <- p +
-        ggplot2::scale_y_continuous(breaks=y_axis, expand = c(0, 0), limits=range(y_axis))
-    }
-    if (is.null(y_axis)){
-      p <- p +
-        ggplot2::scale_y_continuous(breaks=  scales::pretty_breaks())
+    if (!add_exp){
+      p <- p + ggplot2::scale_y_continuous(breaks=  scales::pretty_breaks())
     }
     if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
@@ -476,6 +464,27 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   if (lang == "de") p <- p + ggplot2::xlab("Datum")
   if (lang == "it") p <- p + ggplot2::xlab("Data")
+  if (add_exp){
+    scal_acci <- ceiling(max(dat_total$Exp)/(max_y*scal)) * 1.05
+    p <- p+ggplot2::geom_point(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "darkgrey")+
+      ggplot2::geom_line(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "darkgrey")+
+      ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                  expand = c(0, 0), limits = c(0, max_y * scal),
+                                  sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1, name="exposition"))
+    p3 <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=Exp)) +
+      ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
+      ggplot2::geom_vline(xintercept=after_bor$Date, colour="darkgrey", linetype=2) +
+      ggplot2::geom_line() +
+      ggplot2::geom_point()  +
+      ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                  expand = c(0, 0), limits = c(0, max(dat_total$Exp, na.rm = TRUE)*1.1))+
+      ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
+      ggplot2::ggtitle(main) +
+      ggplot2::ylab("exposition") +
+      ggplot2::theme_bw()
+    if (orientation_x == "v")  p3 <- p3 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
+    if (lang == "de") p3 <- p3 + ggplot2::ylab("Exposition")
+  }
   ## Additional optional plot with 95% confidence interval for measure effectiveness
   if (KI_plot){
     d <- expect_before[dim(expect_before)[1], "expect"]-expect_after[1, "expect"]
@@ -496,9 +505,16 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
             axis.text.y=ggplot2::element_blank())
   }
   if (!KI_plot) p2 = NULL
-  output <- list(fit = fit, modelname=modelname, data = rbind(expect_before, expect_after),  pvalue_measure= pvalue_measure,
-                 pvalue_trend=pvalue_trend,  pvalue_interaction= pvalue_interaction, test_overdisp = test_overdisp, plot_KI = p2,  plot=p,
-                 conf_limit = conf_limit, lang = lang)
+  if (!add_exp | is.null(exposition)) output <- list(fit = fit, modelname=modelname, data = rbind(expect_before, expect_after),
+                                                     pvalue_measure= pvalue_measure, pvalue_trend=pvalue_trend,
+                                                     pvalue_interaction= pvalue_interaction, test_overdisp = test_overdisp,
+                                                     plot_KI = p2,  plot=p, conf_limit = conf_limit, lang = lang)
+  if (add_exp & !is.null(exposition)) output <- list(fit = fit, modelname=modelname, data = rbind(expect_before, expect_after),
+                                                     pvalue_measure= pvalue_measure, pvalue_trend=pvalue_trend,
+                                                     pvalue_interaction= pvalue_interaction, test_overdisp = test_overdisp,
+                                                     plot_KI = p2,  plot=p, conf_limit = conf_limit, lang = lang, plot_exposition = p3)
+
+
   class(output) <- "class_effectiveness"
   return(output)
 }
