@@ -2,7 +2,7 @@
 % Please edit documentation in R/effectiveness_multiple.R
 \name{effectiveness_multiple}
 \alias{effectiveness_multiple}
-\title{Function to evaluate the effectiveness of measures with data from multiple location}
+\title{Evaluation effectiveness of measures with data from multiple location}
 \usage{
 effectiveness_multiple(
   accidents,
@@ -45,12 +45,28 @@ effectiveness_multiple(
 
 \item{lang}{language for output ("en", "fr", "de" or "it")}
 }
+\value{
+A specific R object (\code{class_effectiveness_multi}) is generated as function output. The main object is the illustration with the graphical analysis of the measures. The \code{print.class_effectiveness_multi()} is used to extract the most important key figures of the analysis.
+Specifically, the output contains the following list elements
+\item{\code{fit}}{Output of the selected counting regression model (negative binomial or poisson family.}
+\item{\code{modelname}}{Selected model.}
+\item{\code{data}}{Prepared data combined from the different locations which were used for the analysis.}
+\item{\code{pvalue_measure}}{p-value of the positive measure effect, if it exists.}
+\item{\code{pvalue_interaction}}{p-value of the interaction term, if it exists.}
+\item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
+\item{\code{plot}}{Plot graphical analysis (ggplot-class).}
+\item{\code{plot_all}}{Plot with the analysis of all the individuell locations (ggplot-class).}
+\item{\code{cases}}{Number of analyzed locations.}
+\item{\code{plot_KI}}{Additional illustration with the 95\% confidence interval for the measure effect (ggplot-class).}
+\item{\code{conf_limit}}{Overlapping of the confidence intervals before and after the measure.}
+\item{\code{lang}}{Selected language.}
+\item{\code{plot_exposition}}{Addional plot of the exposition, if available (ggplot-class).}
+}
 \description{
 Function to evaluate the effectiveness of measures with data from multiple location
 }
 \details{
-Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the #' measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. #' However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched #' to a Negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: #' no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best
-model is displayed. The exposure can optionally be considered as an offset.
+Traffic accidents before and after the implementation of a traffic measure at different location are analyzed together to evaluate the overall effect of the measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated:  no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
 }
 \examples{
   multi1 <- effectiveness_multiple(accidents = list(example_no_effect, example_measure_effect),
@@ -59,4 +75,7 @@ model is displayed. The exposure can optionally be considered as an offset.
   multi2 <- effectiveness_multiple(accidents = list(example_no_effect, example_measure_effect),
   measure_start = c('1.1.2011', '1.1.2012'), measure_end = c('1.1.2011', '1.1.2012'), exposition = exposition_ex2)
   print(multi2)
+}
+\seealso{
+\code{\link[STAAD:effectiveness]{effectiveness()}} for the analysis of a single measure.
 }
