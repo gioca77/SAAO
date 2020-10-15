@@ -1,9 +1,9 @@
 #' Evaluation effectiveness of measures with data from multiple location
 #'
-#' @description Function to evaluate the effectiveness of measures with data from multiple location
+#' @description Function to evaluate the effectiveness of measures to reduce traffic accidents with data from multiple location.
 #'
 #' @details
-#' Traffic accidents before and after the implementation of a traffic measure at different location are analyzed together to evaluate the overall effect of the measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated:  no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
+#' Traffic accidents before and after the implementation of a traffic measure at different location are analyzed together to evaluate the overall effect of the measure. For the analysis, the accident data at the different locations before and after the action are added up. The implementation of the measures does not have to take place simultaneously, the data is adjusted accordingly. Before and after the measure, only the time range that is available for all locations is taken into account. This means that the site with the shortest time series before the measure and the site with the shortest time series after the measure determine the length of the evaluation period. As in the function \code{\link[STAAD:effectiveness]{effectiveness}} the counting data are modeled using count regression, by default with a poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated:  no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
 #' @param accidents A list with either an R date/time or character vectors with accident data for each location. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
 #' @param measure_start A vector with the dates (R date/time as well as character in '2014-04-22', '2014/04/22' or '22.4.2014 format) of the implementation of the measure started for each location. The vector must either be the same length as the number of elements in the accident-list or contain only one value. If only one value is given, it is used for all locations.
 #' @param measure_end A vector with the dates the implementation of the measure was finished for each location (first day after the measure). The vector must either be the same length as the number of elements in the accident-list or contain only one value. If only one value is given, it is used for all locations.
@@ -115,7 +115,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end, exposi
   }
   if (!(lang %in% c("en", "de", "it", "fr"))){
     lang <- "en"
-    warning("language unknown, set to english")
+    warning("language unknown, set to English")
   }
   if (!is.null(orientation_x)){
     if (!(orientation_x %in% c("v", "V", "h", "H"))){

@@ -1,5 +1,9 @@
-#' Function to evaluate the trend in accident time series
+#' Trend evaluation in accident time series.
 #'
+#' @description Function to evaluate the trend in a traffic accident time series.
+#'
+#' @details
+#' The function provides a tool for a time-series monitoring to analyze general trends of accident count data. The methodology is based on poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial regression. The model enables the user to quantify observed trends and assess their statistical significance (reliability of results). The time resolution for accident times is one year. The start date is freely selectable. Due to the seasons, the independence of the data series cannot be guaranteed for analyses during the year.
 #' @param accidents Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
 #' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
 #' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
@@ -12,6 +16,17 @@
 #' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
 #' @param add_exp FALSE/TRUE-option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.
 #' @param lang Language for output ("en", "fr", "de" or "it")
+#' @seealso \code{\link[STAAD:earlywarning]{earlywarning()}} function for early warning, which indicates to the user whether the current annual accident incidence is notably higher than in previous years.
+#' @return A specific R object (\code{class_timeseriesanalyis}) is generated as function output. The main object is the illustration with the graphical analysis of the trend in the time-serie. The function \code{print.class_timeseriesanalyis()} is used to extract the most important key figures of the analysis.
+#' Specifically, the output contains the following list elements
+#' \item{\code{fit}}{Output of the counting regression model (negative binomial or poisson family.}
+#' \item{\code{data}}{Prepared data which were used for the analysis.}
+#' \item{\code{trend}}{Annual trend}
+#' \item{\code{pvalue_trend}}{p-value for the trend coefficient.}
+#' \item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
+#' \item{\code{plot}}{Plot graphical analysis (ggplot-class).}
+#' \item{\code{lang}}{Selected language.}
+#' \item{\code{plot_exposition}}{Addional plot of the exposition, if available (ggplot-class).}
 #' @export
 #' @examples
 #'   ex1 <- timeseriesanalysis(accidents = example1_timeserie)
@@ -64,7 +79,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   }
   if (!(lang %in% c("en", "de", "it", "fr"))){
     lang <- "en"
-    warning("language unknown, set to english")
+    warning("language unknown, set to English")
   }
   if (!is.null(orientation_x)){
     if (!(orientation_x %in% c("v", "V", "h", "H"))){
@@ -317,7 +332,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   if (lang == "it") p <- p + ggplot2::xlab("Data")
   if (!add_exp | is.null(exposition)) output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
                                                      test_overdisp = test_overdisp, plot= p, lang = lang)
-  if (add_exp & !is.null(exposition)) output <- output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
+  if (add_exp & !is.null(exposition)) output <- list(fit = fit, data = dat_model, trend = trend, p_value_trend = p_value_trend,
                                                                test_overdisp = test_overdisp, plot= p, lang = lang, plot_exposition = p2)
   class(output) <- "class_timeseriesanalyis"
   return(output)

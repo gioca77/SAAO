@@ -1,5 +1,10 @@
-#' Function to determine the prediction interval for new value in time series
+#' Early warning system for a new data point
 #'
+#' @description Function to determine the return period / prediction interval for new value in a traffic accident time series.
+#'
+#' @details
+#' The function provides a tool to evaluate if a new data point in a traffic accident count data time-series is compatible with the past data. The return period or the prediction interval for the new data point is determined from the past data by a simulation. If the data point is striking, this is an indication that something has changed substantially in the last year.
+# 'The simulation is passed on the on poisson or, if overdispersion is detected, negative binomial model. With the model a prediction for the new year is executed. The expected value for the new observation is simulated from a normal distribution with the predicted value and the standard deviation of the prediction on the link scale. The simulated expected values are transformed back into the observation scale and used to simulate observations using the poisson or negative binomial distribution.
 #' @param accidents Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
 #' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
 #' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
@@ -12,6 +17,19 @@
 #' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical.
 #' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.
 #' @param lang Language for output ("en", "fr", "de" or "it")
+#' @seealso \code{\link[STAAD:timeseriesanalysis]{timeseriesanalysis()}} function to evaluate the trend in a traffic accident time series.
+#' @return A specific R object (\code{class_earlywarning}) is generated as function output. The main object is the illustration with the prediction interval for the newest observation in the time-serie. The function \code{print.class_earlywarnin()} is used to extract the most important key figures of the analysis.
+#' Specifically, the output contains the following list elements
+#' \item{\code{ci}}{Prediction interval or limits for a 5-, 10-, 20- and 100-year event for the new value.}
+#' \item{\code{fit}}{Output of the counting regression model (negative binomial or poisson family.}
+#' \item{\code{return_period}}{Return period for the new value.}
+#' \item{\code{data}}{Prepared data which were used for the analysis.}
+#' \item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
+#' \item{\code{pred.level}}{Level of the prediction interval.}
+#' \item{\code{plot}}{Plot graphical analysis (ggplot-class).}
+#' \item{\code{lang}}{Selected language.}
+#' \item{\code{plot_exposition}}{Addional plot of the exposition, if available (ggplot-class).}
+#'
 #' @export
 #' @examples
 #'   ex1 <- earlywarning(accidents = example1_timeserie)
@@ -63,7 +81,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   }
   if (!(lang %in% c("en", "de", "it", "fr"))){
     lang <- "en"
-    warning("language unknown, set to english")
+    warning("language unknown, set to English")
   }
   if (!is.null(orientation_x)){
     if (!(orientation_x %in% c("v", "V", "h", "H"))){
@@ -247,8 +265,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     }
     return_period <- 1/(1-ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
     if(return_period > 1/(1/n)) return_period <- paste(">", 1/(1/n))
-    warning(paste0("Since all values are 0, the prediction interval cannot be determined by simulation. Estimation by ",
-                   pred.level, " quantile of the Poisson distribution."))
+    warning(paste0("Since all values are 0, the prediction interval cannot be determined by simulation. Estimation by quantile of the Poisson distribution."))
   }
   dat_total <- merge(x=dat_model, y=dat_fit, by="Date", all=TRUE)
   col_w <- ifelse(dat_total[dat_total$Date==max(dat_total$Date),"accidents"] > ci[1,2], "red", "black")
@@ -372,10 +389,11 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
                                 labels = paste0(pred.level*100, "% intervallo di previsione"))
   if (lang == "de") p <- p + ggplot2::xlab("Datum")
   if (lang == "it") p <- p + ggplot2::xlab("Data")
-  if (!add_exp | is.null(exposition)) output <- list( ci = ci[,1:2], data = dat_total, fit = fit, test_overdisp = test_overdisp, plot = p,
-                                                      pred.level = pred.level, lang = lang, return_period = return_period)
-  if (add_exp & !is.null(exposition)) output <- list( ci = ci[,1:2], data = dat_total, fit = fit, test_overdisp = test_overdisp, plot = p,
-                                                      pred.level = pred.level, lang = lang, return_period = return_period, plot_exposition = p2)
+  if (!add_exp | is.null(exposition)) output <- list(ci = ci[,1:2], fit = fit, return_period = return_period, data = dat_total,
+                                                     test_overdisp = test_overdisp, plot = p, pred.level = pred.level, lang = lang)
+  if (add_exp & !is.null(exposition)) output <- list(ci = ci[,1:2], fit = fit, return_period = return_period, data = dat_total,
+                                                     test_overdisp = test_overdisp, plot = p, pred.level = pred.level, lang = lang,
+                                                     plot_exposition = p2)
   class(output) <- "class_earlywarning"
   return(output)
 }

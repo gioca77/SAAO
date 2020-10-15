@@ -2,7 +2,7 @@
 % Please edit documentation in R/timeseriesanalysis.R
 \name{timeseriesanalysis}
 \alias{timeseriesanalysis}
-\title{Function to evaluate the trend in accident time series}
+\title{Trend evaluation in accident time series.}
 \usage{
 timeseriesanalysis(
   accidents,
@@ -44,8 +44,23 @@ timeseriesanalysis(
 
 \item{lang}{Language for output ("en", "fr", "de" or "it")}
 }
+\value{
+A specific R object (\code{class_timeseriesanalyis}) is generated as function output. The main object is the illustration with the graphical analysis of the trend in the time-serie. The function \code{print.class_timeseriesanalyis()} is used to extract the most important key figures of the analysis.
+Specifically, the output contains the following list elements
+\item{\code{fit}}{Output of the counting regression model (negative binomial or poisson family.}
+\item{\code{data}}{Prepared data which were used for the analysis.}
+\item{\code{trend}}{Annual trend}
+\item{\code{pvalue_trend}}{p-value for the trend coefficient.}
+\item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
+\item{\code{plot}}{Plot graphical analysis (ggplot-class).}
+\item{\code{lang}}{Selected language.}
+\item{\code{plot_exposition}}{Addional plot of the exposition, if available (ggplot-class).}
+}
 \description{
-Function to evaluate the trend in accident time series
+Function to evaluate the trend in a traffic accident time series.
+}
+\details{
+The function provides a tool for a time-series monitoring to analyze general trends of accident count data. The methodology is based on poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial regression. The model enables the user to quantify observed trends and assess their statistical significance (reliability of results). The time resolution for accident times is one year. The start date is freely selectable. Due to the seasons, the independence of the data series cannot be guaranteed for analyses during the year.
 }
 \examples{
   ex1 <- timeseriesanalysis(accidents = example1_timeserie)
@@ -69,4 +84,7 @@ Function to evaluate the trend in accident time series
   summary(ex7)
   plot(ex7)
   plot(ex7$plot_exposition)
+}
+\seealso{
+\code{\link[STAAD:earlywarning]{earlywarning()}} function for early warning, which indicates to the user whether the current annual accident incidence is notably higher than in previous years.
 }

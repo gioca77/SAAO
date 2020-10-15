@@ -63,10 +63,10 @@ Specifically, the output contains the following list elements
 \item{\code{plot_exposition}}{Addional plot of the exposition, if available (ggplot-class).}
 }
 \description{
-Function to evaluate the effectiveness of measures with data from multiple location
+Function to evaluate the effectiveness of measures to reduce traffic accidents with data from multiple location.
 }
 \details{
-Traffic accidents before and after the implementation of a traffic measure at different location are analyzed together to evaluate the overall effect of the measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated:  no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
+Traffic accidents before and after the implementation of a traffic measure at different location are analyzed together to evaluate the overall effect of the measure. For the analysis, the accident data at the different locations before and after the action are added up. The implementation of the measures does not have to take place simultaneously, the data is adjusted accordingly. Before and after the measure, only the time range that is available for all locations is taken into account. This means that the site with the shortest time series before the measure and the site with the shortest time series after the measure determine the length of the evaluation period. As in the function \code{\link[STAAD:effectiveness]{effectiveness}} the counting data are modeled using count regression, by default with a poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated:  no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
 }
 \examples{
   multi1 <- effectiveness_multiple(accidents = list(example_no_effect, example_measure_effect),

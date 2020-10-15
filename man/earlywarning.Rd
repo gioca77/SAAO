@@ -2,7 +2,7 @@
 % Please edit documentation in R/earlywarning.R
 \name{earlywarning}
 \alias{earlywarning}
-\title{Function to determine the prediction interval for new value in time series}
+\title{Early warning system for a new data point}
 \usage{
 earlywarning(
   accidents,
@@ -44,8 +44,24 @@ earlywarning(
 
 \item{lang}{Language for output ("en", "fr", "de" or "it")}
 }
+\value{
+A specific R object (\code{class_earlywarning}) is generated as function output. The main object is the illustration with the prediction interval for the newest observation in the time-serie. The function \code{print.class_earlywarnin()} is used to extract the most important key figures of the analysis.
+Specifically, the output contains the following list elements
+\item{\code{ci}}{Prediction interval or limits for a 5-, 10-, 20- and 100-year event for the new value.}
+\item{\code{fit}}{Output of the counting regression model (negative binomial or poisson family.}
+\item{\code{return_period}}{Return period for the new value.}
+\item{\code{data}}{Prepared data which were used for the analysis.}
+\item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
+\item{\code{pred.level}}{Level of the prediction interval.}
+\item{\code{plot}}{Plot graphical analysis (ggplot-class).}
+\item{\code{lang}}{Selected language.}
+\item{\code{plot_exposition}}{Addional plot of the exposition, if available (ggplot-class).}
+}
 \description{
-Function to determine the prediction interval for new value in time series
+Function to determine the return period / prediction interval for new value in a traffic accident time series.
+}
+\details{
+The function provides a tool to evaluate if a new data point in a traffic accident count data time-series is compatible with the past data. The return period or the prediction interval for the new data point is determined from the past data by a simulation. If the data point is striking, this is an indication that something has changed substantially in the last year.
 }
 \examples{
   ex1 <- earlywarning(accidents = example1_timeserie)
@@ -68,4 +84,7 @@ Function to determine the prediction interval for new value in time series
   plot(ex6$plot_exposition)
   ex7 <- earlywarning(accidents = example3_timeserie, exposition=exposition_ex3)
   summary(ex7)
+}
+\seealso{
+\code{\link[STAAD:timeseriesanalysis]{timeseriesanalysis()}} function to evaluate the trend in a traffic accident time series.
 }

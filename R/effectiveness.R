@@ -1,10 +1,10 @@
 #' Evaluation of measures effectiveness
 #'
-#' @description Function to evaluate the effectiveness of measures
+#' @description Function to evaluate the effectiveness of measures to reduce traffic accidents.
 #'
 #' @details
-#' Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
-#' An important assumption in the analysis is that the implementation of measures is independent of the actuel number of accidents. Accident numbers are random variables that fluctuate. If a measure is taken due to a randomly increased number of accidents, this leads to an overestimation of the effect of the measure in the analysis, since in such cases a decrease in the number of accidents can be expected even without a measure (regression-to-the-mean phenomenon). This is particularly problematic for site-specific measures with small accident numbers. Ideally, for the period prior to the measure, only the period after which the decision to implement the measure was taken should be taken into account. In practice, this is difficult because since the time periods are too short.
+#' Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the measure. Since accident are counting data, they are modeled using count regression, by default with a poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
+#' An important assumption in the analysis is that the implementation of measures is independent of the actual number of accidents. Accident numbers are random variables that fluctuate. If a measure is taken due to a randomly increased number of accidents, this leads to an overestimation of the effect of the measure in the analysis, since in such cases a decrease in the number of accidents can be expected even without a measure (regression-to-the-mean phenomenon). This is particularly problematic for site-specific measures with small accident numbers. Ideally, for the period prior to the measure, only the period after which the decision to implement the measure was taken should be taken into account. In practice, this is difficult because since the time periods are too short.
 #'
 #' @param accidents Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
 #' @param measure_start At which data the implementation of measure started (e.g. character '22.4.2014' or R date/time)
@@ -20,7 +20,7 @@
 #' @param KI_plot TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)
 #' @param lang Language for output ("en", "fr", "de" or "it")
 #' @seealso \code{\link[STAAD:effectiveness_multiple]{effectiveness_multiple()}} for the joint analysis of a measure that was implemented at several locations.
-#' @return A specific R object (\code{class_effectiveness}) is generated as function output. The main object is the illustration with the graphical analysis of the measures. The \code{print.class_effectiveness()} is used to extract the most important key figures of the analysis.
+#' @return A specific R object (\code{class_effectiveness}) is generated as function output. The main object is the illustration with the graphical analysis of the measures. The function \code{print.class_effectiveness()} is used to extract the most important key figures of the analysis.
 #' Specifically, the output contains the following list elements
 #' \item{\code{fit}}{Output of the selected counting regression model (negative binomial or poisson family.}
 #' \item{\code{modelname}}{Selected model.}
@@ -94,7 +94,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   if (!(lang %in% c("en", "de", "it", "fr"))){
     lang <- "en"
-    warning("language unknown, set to english")
+    warning("language unknown, set to English")
   }
   if (!is.null(orientation_x)){
     if (!(orientation_x %in% c("v", "V", "h", "H"))){
