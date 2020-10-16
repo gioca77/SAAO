@@ -3,7 +3,7 @@
 #' @description Function to evaluate the effectiveness of measures to reduce traffic accidents.
 #'
 #' @details
-#' Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a Negative Binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
+#' Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a Negative Binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset. The measure effect evaluates the difference directly before and directly after the measure.
 #' An important assumption in the analysis is, that the implementation of measures is independent of the actual number of accidents. Accident numbers are random variables that fluctuate. If a measure is taken due to a randomly increased number of accidents, this leads to an overestimation of the effect of the measure in the analysis, since in such cases a decrease in the number of accidents can be expected even without a measure (regression-to-the-mean phenomenon). This is particularly problematic for site-specific measures with small accident numbers. Ideally, as the period prior to the measure, only the period after the decision to implement the measure was taken should be considered. In practice, this is difficult because the time periods are too short.
 #'
 #' @param accidents Either an R date/time or character vector with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.
@@ -63,7 +63,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
                           orientation_x = NULL, add_exp = FALSE, KI_plot = TRUE,  lang = "en"){
   ## internal parameters
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
-  intervalle <- c(seq(0.01,0.99,0.01),0.991,0.992,0.993,0.994, 0.995, 0.996, 0.997, 0.998, 0.999, 0.9999) #Confidence intervals taken into account
+  intervalle <- c(0.001, seq(0.01,0.99,0.01),0.991,0.992,0.993,0.994, 0.995, 0.996, 0.997, 0.998, 0.999, 0.9999) #Confidence intervals taken into account
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
                    silent = silent)
@@ -310,9 +310,11 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       i_n <- exp(preds_aft$fit+qnorm(intervalle)*preds_aft$se.fit)
     }
     conf_limit <- intervalle[which(i_v-i_n<0)[1]-1]*100
+    if(length(conf_limit) == 0) conf_limit <- "<0.1"
     if(is.na(conf_limit)) conf_limit <- "> 99.99"
-    pvalue_measure <- paste("no overlap of the ", conf_limit, "%-confidence interval", sep="")
-    if (is.na(pvalue_interaction)) pvalue_measure <- paste(pvalue_measure, " !Attention negative trend effect!", sep="")
+    pvalue_measure <- paste("No overlap of the ", conf_limit, "%-confidence interval.", sep="")
+    if (is.na(pvalue_interaction) & lang %in% c("en", "fr", "it")) pvalue_measure <- paste(pvalue_measure, " !Attention the trend increases more after the measure than before!", sep="")
+    if (is.na(pvalue_interaction) & lang == "de") pvalue_measure <- paste(pvalue_measure, " !Achtung der Trend steigt nach der Massnahme staerker als davor!", sep="")
   }
   pvalue_trend <- NA
   if("Date" %in% rownames(summary(fit)$coefficients)){
@@ -386,7 +388,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     i_n <- -log(q_Jahr_int)
     conf_limit <- intervalle[which(i_v-i_n<0)[1]-1]*100
     if(is.na(conf_limit)) conf_limit <- "> 99.99"
-    pvalue_measure <- paste("no overlap of the ", conf_limit, "%-confidence interval", sep="")
+    pvalue_measure <- paste("No overlap of the ", conf_limit, "%-confidence interval.", sep="")
   }
   # Base plot
   if (is.null(orientation_x)) orientation_x <- ifelse(diff(as.numeric(format(range(dat_total$Date), '%Y'))) > 8, "v", "h")

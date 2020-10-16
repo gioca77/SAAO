@@ -11,6 +11,7 @@
 #' @param until Until what date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
 #' @param n Number of simulations
 #' @param pred.level Level of the prediction interval, if NULL (default) an interval with return periods is constructed
+#' @param alternative A character string specifying if the return period / prediction interval are calculate one or two sidet, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.
 #' @param main Optional title for the plot.
 #' @param x_axis Optional vector with the values for the x-axis.
 #' @param max_y Optional maximum value for the y-axis.
@@ -29,7 +30,6 @@
 #' \item{\code{plot}}{Plot graphical analysis (ggplot-class).}
 #' \item{\code{lang}}{Selected language.}
 #' \item{\code{plot_exposition}}{Addional plot of the exposition, if available (ggplot-class).}
-#'
 #' @export
 #' @examples
 #'   ex1 <- earlywarning(accidents = example1_timeserie)
@@ -53,8 +53,8 @@
 #'   ex7 <- earlywarning(accidents = example3_timeserie, exposition=exposition_ex3)
 #'   summary(ex7)
 
-earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 10000,
-                         pred.level = NULL, main = NULL,  x_axis = NULL, max_y = NULL,
+earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 1000000,
+                         pred.level = NULL, alternative = "greater",  main = NULL,  x_axis = NULL, max_y = NULL,
                          orientation_x = NULL, add_exp = FALSE, lang = "en") {
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
@@ -79,19 +79,27 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       until <- try(as.Date(until, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")), silent=silent)
     } else until <-  try(as.Date(paste0(until, "-12-31")), silent=silent)
   }
+  if (!(alternative %in% c("two.sided", "less", "greater", "t", "l", "g"))){
+    alternative <- "greater"
+    warning('alternative should be one of "greater", "two.sided", "less"; set to "greater".')
+  }
+  if (alternative == "t") alternative <- "two.sided"
+  if (alternative == "g") alternative <- "greater"
+  if (alternative == "l") alternative <- "less"
   if (!(lang %in% c("en", "de", "it", "fr"))){
     lang <- "en"
-    warning("language unknown, set to English")
+    warning("language (argument land) unknown, set to English.")
   }
+
   if (!is.null(orientation_x)){
     if (!(orientation_x %in% c("v", "V", "h", "H"))){
       orientation_x <- NULL
-      warning('For orientation_x only "v" or "h" are allowed')
+      warning('For orientation_x only "v" or "h" are allowed.')
     }
   }
   if (is.null(add_exp) || !(add_exp %in% c(TRUE, FALSE))){
     add_exp <- FALSE
-    warning('For add_exp only TRUE and FALSE are allowed. Set to FALSE')
+    warning('For add_exp only TRUE and FALSE are allowed. Set to FALSE.')
   }
   Check <- newArgCheck_sep()
   #* accidents format
@@ -230,12 +238,25 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     y_int <- rpois(n, lambda = exp(samp))
   }
   if (!is.null(pred.level)){
-    lp <- (1 - pred.level) / 2
-    up <- 1 - lp
+    if (alternative == "two.sided") {
+      lp <- (1 - pred.level) / 2
+      up <- 1 - lp
+    }
+    if (alternative == "greater") {
+      lp <- 0
+      up <- pred.level
+    }
+    if (alternative == "less") {
+      lp <- 1 - pred.level
+      up <- 1
+    }
     ci <- as.data.frame(matrix(quantile(y_int, c(lp, up), na.rm=TRUE),  nrow=1))
   }
   if (is.null(pred.level)){
-    ci <- as.data.frame(matrix(data=quantile(y_int, c(0.005, 0.995, 0.025, 0.975,0.05, 0.95, 0.1, 0.9), na.rm=TRUE), nrow=4, byrow=T))
+    if (alternative == "two.sided") quant <- c(0.005, 0.995, 0.025, 0.975,0.05, 0.95, 0.1, 0.9)
+    if (alternative == "greater") quant <- c(0, 0.99, 0, 0.95, 0, 0.9, 0, 0.8)
+    if (alternative == "less") quant <- c(0.01, 1, 0.05, 1, 0.1, 1, 0.2, 1)
+    ci <- as.data.frame(matrix(data=quantile(y_int, quant, na.rm=TRUE), nrow=4, byrow=T))
   }
   colnames(ci)[1:2] <- c("min", "max")
   ci$Date <- dat_model[dim(dat_model)[1], "Date"]
@@ -247,9 +268,15 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
                         expect = exp(preds$fit),
                         low = exp(preds$fit-qnorm(0.975)*preds$se.fit),
                         upp = exp(preds$fit+qnorm(0.975)*preds$se.fit))
-
   if(sum(dat_fit$upp != Inf) != 0){
-    return_period <- 1/(sum(y_int>=dat_model[dim(dat_model)[1], "accidents"], na.rm=TRUE)/n)
+    if (alternative == "greater") extremer_cases <- sum(y_int>dat_model[dim(dat_model)[1], "accidents"], na.rm=TRUE)
+    if (alternative == "less") extremer_cases <- sum(y_int<dat_model[dim(dat_model)[1], "accidents"], na.rm=TRUE)
+    if (alternative == "two.sided"){
+      great <- sum(y_int>dat_model[dim(dat_model)[1], "accidents"], na.rm=TRUE)
+      less <- sum(y_int<dat_model[dim(dat_model)[1], "accidents"], na.rm=TRUE)
+      extremer_cases <- 2 * min(great, less)
+    }
+    return_period <- 1/(extremer_cases/n)
     if(return_period==Inf) return_period <- paste(">", 1/(1/n))
   }
   if(sum(dat_fit$upp != Inf) == 0){
@@ -261,12 +288,19 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       ci[1, 1:2] <- c(0, qpois(pred.level, lambda_est))
     }
     if (is.null(pred.level)){
-      ci[, 1:2] <- as.data.frame(matrix(data=qpois(c(0.005, 0.995, 0.025, 0.975,0.05, 0.95, 0.1, 0.9), lambda_est), nrow=4, byrow=T))
+      if (alternative == "two.sided") quant <- c(0.005, 0.995, 0.025, 0.975,0.05, 0.95, 0.1, 0.9)
+      if (alternative == "greater") quant <- c(0, 0.99, 0, 0.95, 0, 0.9, 0, 0.8)
+      if (alternative == "less") quant <- c(0.01, 1, 0.05, 1, 0.1, 1, 0.2, 1)
+      ci[, 1:2] <- as.data.frame(matrix(data=qpois(quant, lambda_est), nrow=4, byrow=T))
     }
-    return_period <- 1/(1-ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
+    if (alternative == "greater") return_period <- 1/(1-ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
+    if (alternative == "less") return_period <- 1/(ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
+    if (alternative == "two.sided") return_period <- 1/(1-ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
     if(return_period > 1/(1/n)) return_period <- paste(">", 1/(1/n))
     warning(paste0("Since all values are 0, the prediction interval cannot be determined by simulation. Estimation by quantile of the Poisson distribution."))
   }
+  if (alternative == "greater") ci[,1] <- 0
+  if (alternative == "less") ci[,2] <- Inf
   dat_total <- merge(x=dat_model, y=dat_fit, by="Date", all=TRUE)
   col_w <- ifelse(dat_total[dat_total$Date==max(dat_total$Date),"accidents"] > ci[1,2], "red", "black")
   # Base plot
@@ -280,7 +314,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   }
   if (is.null(exposition)){
     if (is.null(max_y)){
-      max_data <- c(dat_total$accidents, dat_total$expect, dat_total$low, dat_total$upp, ci$max)
+      max_data <- c(dat_total$accidents, dat_total$expect, dat_total$low, dat_total$upp, ci$max[is.finite(ci$max)])
       max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
     }
      p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents)) +
@@ -288,10 +322,14 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_ribbon(ggplot2::aes(ymin=low,ymax=upp), fill="grey", alpha=0.5) +
       ggplot2::geom_line() +
-      ggplot2::geom_point()  +
-      ggplot2::geom_segment(data=ci, ggplot2::aes(y = min,
-                                         x = Date, yend=max,
-                                         xend=Date, col=level), size=ci$size) +
+      ggplot2::geom_point()
+     if (alternative != "less") p <- p +
+       ggplot2::geom_segment(data=ci, ggplot2::aes(y = min, x = Date, yend=max,
+                                         xend=Date, col=level), size=ci$size)
+     if (alternative == "less") p <- p +
+       ggplot2::geom_segment(data=ci, ggplot2::aes(y = min, x = Date, yend=max_y,
+                                                   xend=Date, col=level), size=ci$size)
+     p <- p +
       ggplot2::geom_line() +
       ggplot2::geom_point(data=dat_total[dat_total$Date == max(dat_total$Date),],
                           ggplot2::aes(x = Date, y = accidents), col= col_w) +
@@ -304,7 +342,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   if (!is.null(exposition)){
     if (is.null(max_y)){
       max_data <- c(dat_total$accidents/dat_total$Exp, dat_total$expect/dat_total$Exp, dat_total$low/dat_total$Exp, dat_total$upp/dat_total$Exp,
-                    ci$max/dat_model$Exp[length(dat_model$Exp)])
+                    (ci$max/dat_model$Exp[length(dat_model$Exp)])[is.finite(ci$max)])
       max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
     }
     scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
@@ -317,7 +355,16 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       ggplot2::geom_point()  +
       ggplot2::geom_segment(data=ci, ggplot2::aes(y = min/ dat_model$Exp[length(dat_model$Exp)] * scal,
                                                   x = Date, yend=max/ dat_model$Exp[length(dat_model$Exp)] * scal,
-                                                  xend=Date, col=level), size=ci$size) +
+                                                  xend=Date, col=level), size=ci$size)
+    if (alternative != "less") p <- p +
+      ggplot2::geom_segment(data=ci, ggplot2::aes(y = min/ dat_model$Exp[length(dat_model$Exp)] * scal,
+                                                  x = Date, yend=max/ dat_model$Exp[length(dat_model$Exp)] * scal,
+                                                  xend=Date, col=level), size=ci$size)
+    if (alternative == "less") p <- p +
+      ggplot2::geom_segment(data=ci, ggplot2::aes(y = min/ dat_model$Exp[length(dat_model$Exp)] * scal,
+                                                  x = Date, yend= max_y,
+                                                  xend=Date, col=level), size=ci$size)
+    p <- p +
       ggplot2::geom_line() +
       ggplot2::geom_point(data=dat_total[dat_total$Date == max(dat_total$Date),],
                           ggplot2::aes(x = Date, y = accidents / Exp* scal),

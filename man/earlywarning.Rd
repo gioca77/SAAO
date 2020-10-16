@@ -9,8 +9,9 @@ earlywarning(
   exposition = NULL,
   from = NULL,
   until = NULL,
-  n = 10000,
+  n = 1e+06,
   pred.level = NULL,
+  alternative = "greater",
   main = NULL,
   x_axis = NULL,
   max_y = NULL,
@@ -31,6 +32,8 @@ earlywarning(
 \item{n}{Number of simulations}
 
 \item{pred.level}{Level of the prediction interval, if NULL (default) an interval with return periods is constructed}
+
+\item{alternative}{A character string specifying if the return period / prediction interval are calculate one or two sidet, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.}
 
 \item{main}{Optional title for the plot.}
 
