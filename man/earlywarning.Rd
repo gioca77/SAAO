@@ -20,37 +20,37 @@ earlywarning(
 )
 }
 \arguments{
-\item{accidents}{Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
+\item{accidents}{Either an R date/time or character vector with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.}
 
-\item{exposition}{Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
+\item{exposition}{Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. DEFAULT NULL.}
 
 \item{from}{From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
 
-\item{until}{Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
+\item{until}{Until what date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
 
 \item{n}{Number of simulations}
 
 \item{pred.level}{Level of the prediction interval, if NULL (default) an interval with return periods is constructed}
 
-\item{main}{Optional title for the plot}
+\item{main}{Optional title for the plot.}
 
-\item{x_axis}{Optional vector with the values for the x-axis}
+\item{x_axis}{Optional vector with the values for the x-axis.}
 
-\item{max_y}{Optional maximum value for the y-axis}
+\item{max_y}{Optional maximum value for the y-axis.}
 
-\item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical.}
+\item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.}
 
-\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.}
+\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is stated.}
 
-\item{lang}{Language for output ("en", "fr", "de" or "it")}
+\item{lang}{Language for output ("en", "fr", "de" or "it").}
 }
 \value{
 A specific R object (\code{class_earlywarning}) is generated as function output. The main object is the illustration with the prediction interval for the newest observation in the time-serie. The function \code{print.class_earlywarnin()} is used to extract the most important key figures of the analysis.
-Specifically, the output contains the following list elements
+Specifically, the output contains a list of the following elements:
 \item{\code{ci}}{Prediction interval or limits for a 5-, 10-, 20- and 100-year event for the new value.}
-\item{\code{fit}}{Output of the counting regression model (negative binomial or poisson family.}
+\item{\code{fit}}{Output of the counting regression model (Negative Binomial or Poisson family.}
 \item{\code{return_period}}{Return period for the new value.}
-\item{\code{data}}{Prepared data which were used for the analysis.}
+\item{\code{data}}{Prepared data that were used for the analysis.}
 \item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
 \item{\code{pred.level}}{Level of the prediction interval.}
 \item{\code{plot}}{Plot graphical analysis (ggplot-class).}

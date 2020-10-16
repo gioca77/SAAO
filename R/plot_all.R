@@ -13,5 +13,5 @@ plot_all <- function(object)
   {
     stop("Not a effectiveness_multi object")
   }
-  plot(object$plot_all)
+  do.call(gridExtra::grid.arrange, object$plot_all)
 }

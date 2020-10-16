@@ -2,7 +2,7 @@
 % Please edit documentation in R/timeseriesanalysis.R
 \name{timeseriesanalysis}
 \alias{timeseriesanalysis}
-\title{Trend evaluation in accident time series.}
+\title{Trend evaluation in accident time series}
 \usage{
 timeseriesanalysis(
   accidents,
@@ -20,35 +20,35 @@ timeseriesanalysis(
 )
 }
 \arguments{
-\item{accidents}{Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
+\item{accidents}{Either an R date/time or character vector with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.}
 
-\item{exposition}{Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
+\item{exposition}{Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. DEFAULT NULL.}
 
 \item{from}{From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.}
 
-\item{until}{Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
+\item{until}{Until what date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
 
-\item{pearson_line}{TRUE/FALSE if line for pearson residual equal 2 should be drawn or not}
+\item{pearson_line}{TRUE/FALSE if line for Pearson residual equal 2 should be drawn or not.}
 
-\item{show_outliers}{FALSE/TRUE if outliers with Pearson residual greater than 2 should be highlighted in color}
+\item{show_outliers}{FALSE/TRUE if outliers with Pearson residual greater than 2 should be highlighted in color.}
 
-\item{main}{Optional title for the plot}
+\item{main}{Optional title for the plot.}
 
-\item{max_y}{Optional maximum value for the y-axis}
+\item{max_y}{Optional maximum value for the y-axis.}
 
-\item{x_axis}{Optional vector with the values for the x-axis}
+\item{x_axis}{Optional vector with the values for the x-axis.}
 
-\item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical}
+\item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.}
 
-\item{add_exp}{FALSE/TRUE-option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.}
+\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is stated.}
 
-\item{lang}{Language for output ("en", "fr", "de" or "it")}
+\item{lang}{Language for output ("en", "fr", "de" or "it").}
 }
 \value{
-A specific R object (\code{class_timeseriesanalyis}) is generated as function output. The main object is the illustration with the graphical analysis of the trend in the time-serie. The function \code{print.class_timeseriesanalyis()} is used to extract the most important key figures of the analysis.
-Specifically, the output contains the following list elements
-\item{\code{fit}}{Output of the counting regression model (negative binomial or poisson family.}
-\item{\code{data}}{Prepared data which were used for the analysis.}
+A specific R object (\code{class_timeseriesanalyis}) is generated as function output. The main object is the illustration with a graphical analysis of the trend in the time-serie. The function \code{print.class_timeseriesanalyis()} is used to extract the most important key figures of the analysis.
+Specifically, the output contains a list of the following elements:
+\item{\code{fit}}{Output of the counting regression model (Negative Binomial or Poisson family.}
+\item{\code{data}}{Prepared data that were used for the analysis.}
 \item{\code{trend}}{Annual trend}
 \item{\code{pvalue_trend}}{p-value for the trend coefficient.}
 \item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
@@ -60,7 +60,7 @@ Specifically, the output contains the following list elements
 Function to evaluate the trend in a traffic accident time series.
 }
 \details{
-The function provides a tool for a time-series monitoring to analyze general trends of accident count data. The methodology is based on poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial regression. The model enables the user to quantify observed trends and assess their statistical significance (reliability of results). The time resolution for accident times is one year. The start date is freely selectable. Due to the seasons, the independence of the data series cannot be guaranteed for analyses during the year.
+The function provides a tool for a time-series monitoring to analyze general trends of accident count data. The methodology is based on Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a Negative Binomial regression. The model enables the user to quantify observed trends and assess their statistical significance (reliability of results). The time resolution for accidentperiods is one year. The start date is freely selectable. Due to the seasons, the independence of the data series cannot be guaranteed for analyses during the year.
 }
 \examples{
   ex1 <- timeseriesanalysis(accidents = example1_timeserie)
@@ -86,5 +86,5 @@ The function provides a tool for a time-series monitoring to analyze general tre
   plot(ex7$plot_exposition)
 }
 \seealso{
-\code{\link[STAAD:earlywarning]{earlywarning()}} function for early warning, which indicates to the user whether the current annual accident incidence is notably higher than in previous years.
+\code{\link[STAAD:earlywarning]{earlywarning()}} function for early warning, which alerts the user if the current annual accident incidence is remarkably higher than in previous years.
 }

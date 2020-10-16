@@ -1,26 +1,26 @@
-#' Trend evaluation in accident time series.
+#' Trend evaluation in accident time series
 #'
 #' @description Function to evaluate the trend in a traffic accident time series.
 #'
 #' @details
-#' The function provides a tool for a time-series monitoring to analyze general trends of accident count data. The methodology is based on poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial regression. The model enables the user to quantify observed trends and assess their statistical significance (reliability of results). The time resolution for accident times is one year. The start date is freely selectable. Due to the seasons, the independence of the data series cannot be guaranteed for analyses during the year.
-#' @param accidents Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
-#' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
+#' The function provides a tool for a time-series monitoring to analyze general trends of accident count data. The methodology is based on Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a Negative Binomial regression. The model enables the user to quantify observed trends and assess their statistical significance (reliability of results). The time resolution for accidentperiods is one year. The start date is freely selectable. Due to the seasons, the independence of the data series cannot be guaranteed for analyses during the year.
+#' @param accidents Either an R date/time or character vector with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.
+#' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. DEFAULT NULL.
 #' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
-#' @param until Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
-#' @param pearson_line TRUE/FALSE if line for pearson residual equal 2 should be drawn or not
-#' @param show_outliers FALSE/TRUE if outliers with Pearson residual greater than 2 should be highlighted in color
-#' @param main Optional title for the plot
-#' @param x_axis Optional vector with the values for the x-axis
-#' @param max_y Optional maximum value for the y-axis
-#' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
-#' @param add_exp FALSE/TRUE-option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.
-#' @param lang Language for output ("en", "fr", "de" or "it")
-#' @seealso \code{\link[STAAD:earlywarning]{earlywarning()}} function for early warning, which indicates to the user whether the current annual accident incidence is notably higher than in previous years.
-#' @return A specific R object (\code{class_timeseriesanalyis}) is generated as function output. The main object is the illustration with the graphical analysis of the trend in the time-serie. The function \code{print.class_timeseriesanalyis()} is used to extract the most important key figures of the analysis.
-#' Specifically, the output contains the following list elements
-#' \item{\code{fit}}{Output of the counting regression model (negative binomial or poisson family.}
-#' \item{\code{data}}{Prepared data which were used for the analysis.}
+#' @param until Until what date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
+#' @param pearson_line TRUE/FALSE if line for Pearson residual equal 2 should be drawn or not.
+#' @param show_outliers FALSE/TRUE if outliers with Pearson residual greater than 2 should be highlighted in color.
+#' @param main Optional title for the plot.
+#' @param x_axis Optional vector with the values for the x-axis.
+#' @param max_y Optional maximum value for the y-axis.
+#' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.
+#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is stated.
+#' @param lang Language for output ("en", "fr", "de" or "it").
+#' @seealso \code{\link[STAAD:earlywarning]{earlywarning()}} function for early warning, which alerts the user if the current annual accident incidence is remarkably higher than in previous years.
+#' @return A specific R object (\code{class_timeseriesanalyis}) is generated as function output. The main object is the illustration with a graphical analysis of the trend in the time-serie. The function \code{print.class_timeseriesanalyis()} is used to extract the most important key figures of the analysis.
+#' Specifically, the output contains a list of the following elements:
+#' \item{\code{fit}}{Output of the counting regression model (Negative Binomial or Poisson family.}
+#' \item{\code{data}}{Prepared data that were used for the analysis.}
 #' \item{\code{trend}}{Annual trend}
 #' \item{\code{pvalue_trend}}{p-value for the trend coefficient.}
 #' \item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
@@ -128,7 +128,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   #* check until > from
   if (is(from)[1]=="Date" & is(until)[1]=="Date"){
     if (from > until)
-      addError_sep(msg = "'until has to be greater then from'",
+      addError_sep(msg = "'until has to be greater than from'",
                    argcheck = Check)
   }
   #* Return errors and warnings (if any)
@@ -137,7 +137,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   ## processing input
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
-  if(from > until) stop("until has to be greater then from")
+  if(from > until) stop("until has to be greater than from")
   timeserie <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(until + 1, '%Y'))),"-", format(until + 1, '%m-%d')))
   if (from[1]>timeserie[1]) timeserie <- timeserie[-1]
   if (length(timeserie)<3){
@@ -186,7 +186,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
                            control = glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent = TRUE)
       if (attr(fit_nb, "class")[1] != "try-error") {
         fit <- fit_nb
-      } else warning("Warning: Overdispersion in the Poisson Model, but Negative Binomial Model could not be estimated")
+      } else warning("Warning: Overdispersion in the Poisson Model, but Negative Binomial Model could not be estimated.")
     }
   }
   if (!is.null(exposition)){
@@ -204,7 +204,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       {
         fit <- fit_nb
         overdisp <- TRUE
-      } else warning("Warning: Overdispersion in the Poisson Model, but Negative Binomial Model could not be estimated")
+      } else warning("Warning: Overdispersion in the Poisson Model, but Negative Binomial Model could not be estimated.")
     }
   }
   if (fit$df.residual==0){

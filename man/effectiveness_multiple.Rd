@@ -2,7 +2,7 @@
 % Please edit documentation in R/effectiveness_multiple.R
 \name{effectiveness_multiple}
 \alias{effectiveness_multiple}
-\title{Evaluation effectiveness of measures with data from multiple location}
+\title{Evaluation effectiveness of measures with data from multiple locations}
 \usage{
 effectiveness_multiple(
   accidents,
@@ -21,41 +21,43 @@ effectiveness_multiple(
 )
 }
 \arguments{
-\item{accidents}{A list with either an R date/time or character vectors with accident data for each location. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'}
+\item{accidents}{A list with either an R date/time or character vectors with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.}
 
-\item{measure_start}{A vector with the dates (R date/time as well as character in '2014-04-22', '2014/04/22' or '22.4.2014 format) of the implementation of the measure started for each location. The vector must either be the same length as the number of elements in the accident-list or contain only one value. If only one value is given, it is used for all locations.}
+\item{measure_start}{A vector with the dates (R date/time as well as character in '2014-04-22', '2014/04/22' or '22.4.2014 format) when the implementation of the measure started for each location. The vector must either be the same length as the number of elements in the accident-list or contain only one value. If only one value is given, it is used for all locations.}
 
-\item{measure_end}{A vector with the dates the implementation of the measure was finished for each location (first day after the measure). The vector must either be the same length as the number of elements in the accident-list or contain only one value. If only one value is given, it is used for all locations.}
+\item{measure_end}{A vector with the dates the implementation when the measure was finished for each location (first day after the measure). The vector must either be the same length as the number of elements in the accident-list or contain only one value. If only one value is given, it is used for all locations.}
 
-\item{exposition}{optional list with data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL}
+\item{exposition}{Optional list with data frames with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. If only one data frame is given, it is used for all locations. DEFAULT NULL.}
 
 \item{from}{Vector with dates or year (1.1.) from which the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used. Must be specified for none or all locations.  If only one value is given, it is used for all locations.}
 
 \item{until}{Vector with dates or year (31.12) until which the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used. Must be specified for none or all locations.  If only one value is given, it is used for all locations.}
 
-\item{main}{optional title for the plot}
+\item{main}{Optional title for the plot.}
 
-\item{max_y}{optional maximum value for the y-axis}
+\item{x_axis}{Optional vector with the values for the x-axis.}
 
-\item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical}
+\item{max_y}{Optional maximum value for the y-axis.}
 
-\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.}
+\item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.}
 
-\item{KI_plot}{TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)}
+\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is stated.}
 
-\item{lang}{language for output ("en", "fr", "de" or "it")}
+\item{KI_plot}{TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect is produced (only of limited use for models without measure effect).}
+
+\item{lang}{language for output ("en", "fr", "de" or "it").}
 }
 \value{
-A specific R object (\code{class_effectiveness_multi}) is generated as function output. The main object is the illustration with the graphical analysis of the measures. The \code{print.class_effectiveness_multi()} is used to extract the most important key figures of the analysis.
-Specifically, the output contains the following list elements
-\item{\code{fit}}{Output of the selected counting regression model (negative binomial or poisson family.}
+A specific R object (\code{class_effectiveness_multi}) is generated as function output. The main object is the illustration with a graphical analysis of the measures. The \code{print.class_effectiveness_multi()} is used to extract the most important key figures of the analysis.
+Specifically, the output contains a list of the following elements:
+\item{\code{fit}}{Output of the selected counting regression model (Negative Binomial or Poisson family.}
 \item{\code{modelname}}{Selected model.}
-\item{\code{data}}{Prepared data combined from the different locations which were used for the analysis.}
+\item{\code{data}}{Prepared data combined from the different locations that were used for the analysis.}
 \item{\code{pvalue_measure}}{p-value of the positive measure effect, if it exists.}
 \item{\code{pvalue_interaction}}{p-value of the interaction term, if it exists.}
 \item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
 \item{\code{plot}}{Plot graphical analysis (ggplot-class).}
-\item{\code{plot_all}}{Plot with the analysis of all the individuell locations (ggplot-class).}
+\item{\code{plot_all}}{List with plots with the analysis of all the individuell locations. Can be visualized with the function \code{\link[STAAD:plot_all]{plot_all()}}.}
 \item{\code{cases}}{Number of analyzed locations.}
 \item{\code{plot_KI}}{Additional illustration with the 95\% confidence interval for the measure effect (ggplot-class).}
 \item{\code{conf_limit}}{Overlapping of the confidence intervals before and after the measure.}
@@ -63,10 +65,10 @@ Specifically, the output contains the following list elements
 \item{\code{plot_exposition}}{Addional plot of the exposition, if available (ggplot-class).}
 }
 \description{
-Function to evaluate the effectiveness of measures to reduce traffic accidents with data from multiple location.
+Function to evaluate the effectiveness of measures to reduce traffic accidents with data from multiple locations.
 }
 \details{
-Traffic accidents before and after the implementation of a traffic measure at different location are analyzed together to evaluate the overall effect of the measure. For the analysis, the accident data at the different locations before and after the action are added up. The implementation of the measures does not have to take place simultaneously, the data is adjusted accordingly. Before and after the measure, only the time range that is available for all locations is taken into account. This means that the site with the shortest time series before the measure and the site with the shortest time series after the measure determine the length of the evaluation period. As in the function \code{\link[STAAD:effectiveness]{effectiveness}} the counting data are modeled using count regression, by default with a poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated:  no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
+Traffic accidents before and after the implementation of a traffic measure at different locations are analyzed together to evaluate the overall effect of the measure. For the analysis, the accident data at the different locations before and after the action are added up. The implementation of the measures does not have to take place simultaneously, the data is adjusted accordingly. Before and after the measure, only the time range that is available for all locations is taken into account. This means that the site with the shortest time series before the measure and the site with the shortest time series after the measure determine the length of the evaluation period. As in the function \code{\link[STAAD:effectiveness]{effectiveness}} the counting data are modeled using count regression, by default with a Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a Negative Binomial model. For the situation analysis, six different model scenarios for the measure are evaluated:  no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
 }
 \examples{
   multi1 <- effectiveness_multiple(accidents = list(example_no_effect, example_measure_effect),
@@ -75,6 +77,7 @@ Traffic accidents before and after the implementation of a traffic measure at di
   multi2 <- effectiveness_multiple(accidents = list(example_no_effect, example_measure_effect),
   measure_start = c('1.1.2011', '1.1.2012'), measure_end = c('1.1.2011', '1.1.2012'), exposition = exposition_ex2)
   print(multi2)
+  plot_all(multi2)
 }
 \seealso{
 \code{\link[STAAD:effectiveness]{effectiveness()}} for the analysis of a single measure.

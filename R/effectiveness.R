@@ -1,30 +1,30 @@
-#' Evaluation of measures effectiveness
+#' Evaluation of effectiveness of measures
 #'
 #' @description Function to evaluate the effectiveness of measures to reduce traffic accidents.
 #'
 #' @details
-#' Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the measure. Since accident are counting data, they are modeled using count regression, by default with a poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a negative binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
-#' An important assumption in the analysis is that the implementation of measures is independent of the actual number of accidents. Accident numbers are random variables that fluctuate. If a measure is taken due to a randomly increased number of accidents, this leads to an overestimation of the effect of the measure in the analysis, since in such cases a decrease in the number of accidents can be expected even without a measure (regression-to-the-mean phenomenon). This is particularly problematic for site-specific measures with small accident numbers. Ideally, for the period prior to the measure, only the period after which the decision to implement the measure was taken should be taken into account. In practice, this is difficult because since the time periods are too short.
+#' Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a Negative Binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
+#' An important assumption in the analysis is, that the implementation of measures is independent of the actual number of accidents. Accident numbers are random variables that fluctuate. If a measure is taken due to a randomly increased number of accidents, this leads to an overestimation of the effect of the measure in the analysis, since in such cases a decrease in the number of accidents can be expected even without a measure (regression-to-the-mean phenomenon). This is particularly problematic for site-specific measures with small accident numbers. Ideally, as the period prior to the measure, only the period after the decision to implement the measure was taken should be considered. In practice, this is difficult because the time periods are too short.
 #'
-#' @param accidents Either an R date/time or character vector with accident data. For character vectors, the following data formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'
-#' @param measure_start At which data the implementation of measure started (e.g. character '22.4.2014' or R date/time)
-#' @param measure_end At which data the implementation of the measure was finished (respectively first day after the measure)
-#' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended back forwards. DEFAULT NULL
+#' @param accidents Either an R date/time or character vector with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.
+#' @param measure_start At which date the implementation of the measure started (e.g. character '22.4.2014' or R date/time).
+#' @param measure_end At which date the implementation of the measure was terminated (respectively first day after the measure finished).
+#' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. DEFAULT NULL.
 #' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
-#' @param until Until when date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
+#' @param until Until what date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
 #' @param main Optional title for the plot.
-#' @param x_axis Optional vector with the values for the x-axis
-#' @param max_y Optional maximum value for the y-axis
-#' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less, above that a vertical
-#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Additionally, a plot of the exposure alone is produced. Only activ if exposure is given.
-#' @param KI_plot TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect should be produced (only of limited use for models without measure effect)
-#' @param lang Language for output ("en", "fr", "de" or "it")
+#' @param x_axis Optional vector with the values for the x-axis.
+#' @param max_y Optional maximum value for the y-axis.
+#' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.
+#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is stated.
+#' @param KI_plot TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect is produced (only of limited use for models without measure effect).
+#' @param lang Language for output ("en", "fr", "de" or "it").
 #' @seealso \code{\link[STAAD:effectiveness_multiple]{effectiveness_multiple()}} for the joint analysis of a measure that was implemented at several locations.
-#' @return A specific R object (\code{class_effectiveness}) is generated as function output. The main object is the illustration with the graphical analysis of the measures. The function \code{print.class_effectiveness()} is used to extract the most important key figures of the analysis.
-#' Specifically, the output contains the following list elements
-#' \item{\code{fit}}{Output of the selected counting regression model (negative binomial or poisson family.}
+#' @return A specific R object (\code{class_effectiveness}) is generated as function output. The main object is the illustration with a graphical analysis of the measures. The function \code{print.class_effectiveness()} is used to extract the most important key figures of the analysis.
+#' Specifically, the output contains a list of the following elements:
+#' \item{\code{fit}}{Output of the selected counting regression model (Negative Binomial or Poisson family.}
 #' \item{\code{modelname}}{Selected model.}
-#' \item{\code{data}}{Prepared data which were used for the analysis.}
+#' \item{\code{data}}{Prepared data that were used for the analysis.}
 #' \item{\code{pvalue_measure}}{p-value of the positive measure effect, if it exists.}
 #' \item{\code{pvalue_interaction}}{p-value of the interaction term, if it exists.}
 #' \item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
@@ -172,7 +172,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   measure_mean <- as.Date(mean(c(as.numeric(measure_start),as.numeric(measure_end))), origin="1970-01-01")
   if (is.null(from)) from <- as.Date(paste0(as.numeric( format(min(accidents), '%Y')), "-01-01"))
   if (is.null(until)) until <- as.Date(paste0(as.numeric( format(max(accidents), '%Y')), "-12-31"))
-  if (from > until) stop("until has to be greater then from")
+  if (from > until) stop("until has to be greater than from")
   if (from > measure_start) stop("measure_start has to be after from")
   if (until < measure_end) stop("measure_end has to be before until")
   before <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric( format(measure_start, '%Y'))),"-", format(measure_start, '%m-%d')))
@@ -227,7 +227,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   during <- sum(accidents >= measure_start & accidents <= measure_end)
   measure_length <-  as.numeric(difftime(measure_end, measure_start, units="days")/365)
   ## check if time before and after measure
-  if (sum(table(dat_model$measure)!=0)==1) stop("no data before or after the measure")
+  if (sum(table(dat_model$measure)!=0)==1) stop("No accident data before or after the measure.")
   if (is.null(exposition)){
     ## model measure and trend effect
     fit1 <- glm(accidents~Date*measure, data=dat_model, family = "poisson")
