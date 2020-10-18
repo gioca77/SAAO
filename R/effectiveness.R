@@ -303,18 +303,20 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     }
     preds_bef <- try(predict(fit, type="link", newdata = bef, se.fit = TRUE), silent=silent)
     preds_aft <- try(predict(fit, type="link", newdata = aft, se.fit = TRUE), silent=silent)
-    if (is(preds_bef)[1]!="try-error"){
-      i_v <- exp(preds_bef$fit-1*qnorm(intervalle)*preds_bef$se.fit)
+    if (exp(preds_aft$fit) < exp(preds_bef$fit)){
+      if (is(preds_bef)[1]!="try-error"){
+        i_v <- exp(preds_bef$fit-1*qnorm(intervalle)*preds_bef$se.fit)
+        }
+      if (is(preds_aft)[1]!="try-error"){
+        i_n <- exp(preds_aft$fit+qnorm(intervalle)*preds_aft$se.fit)
+      }
+      conf_limit <- intervalle[which(i_v-i_n<0)[1]-1]*100
+      if(length(conf_limit) == 0) conf_limit <- "<0.1"
+      if(is.na(conf_limit)) conf_limit <- "> 99.99"
+      pvalue_measure <- paste("No overlap of the ", conf_limit, "%-confidence interval.", sep="")
+      if (is.na(pvalue_interaction) & lang %in% c("en", "fr", "it")) pvalue_measure <- paste(pvalue_measure, " !Attention the trend increases more after the measure than before!", sep="")
+      if (is.na(pvalue_interaction) & lang == "de") pvalue_measure <- paste(pvalue_measure, " !Achtung der Trend steigt nach der Massnahme staerker als davor!", sep="")
     }
-    if (is(preds_aft)[1]!="try-error"){
-      i_n <- exp(preds_aft$fit+qnorm(intervalle)*preds_aft$se.fit)
-    }
-    conf_limit <- intervalle[which(i_v-i_n<0)[1]-1]*100
-    if(length(conf_limit) == 0) conf_limit <- "<0.1"
-    if(is.na(conf_limit)) conf_limit <- "> 99.99"
-    pvalue_measure <- paste("No overlap of the ", conf_limit, "%-confidence interval.", sep="")
-    if (is.na(pvalue_interaction) & lang %in% c("en", "fr", "it")) pvalue_measure <- paste(pvalue_measure, " !Attention the trend increases more after the measure than before!", sep="")
-    if (is.na(pvalue_interaction) & lang == "de") pvalue_measure <- paste(pvalue_measure, " !Achtung der Trend steigt nach der Massnahme staerker als davor!", sep="")
   }
   pvalue_trend <- NA
   if("Date" %in% rownames(summary(fit)$coefficients)){
