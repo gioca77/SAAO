@@ -43,8 +43,10 @@
 #'   print(multi2)
 #'   plot_all(multi2)
 
-effectiveness_multiple <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL,
-                          until = NULL, main = NULL, x_axis = NULL, max_y = NULL, orientation_x = NULL,
+effectiveness_multiple <- function(accidents, measure_start, measure_end,
+                                   exposition = NULL, from = NULL,
+                          until = NULL, main = NULL, x_axis = NULL,
+                          max_y = NULL, orientation_x = NULL,
                           add_exp = FALSE, KI_plot = FALSE,  lang = "en"){
   ## internal parameters
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
@@ -146,20 +148,21 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end, exposi
   before_length <- rep(NA,len)
   after_length <- rep(NA,len)
   plot_list <- list()
+  if (lang == "en") main_loc <- "location"
+  if (lang == "de") main_loc <- "location"
+  if (lang == "fr") main_loc <- "site"
+  if (lang == "it") main_loc <- "posizione"
   for(i in 1:len){
-    if (lang == "en") main <- "location"
-    if (lang == "de") main <- "location"
-    if (lang == "fr") main <- "site"
-    if (lang == "it") main <- "posizione"
     if(is.null(from)) from_case <- NULL
     if(!is.null(from)) from_case <- from[i]
     if(is.null(until)) until_case <- NULL
     if(!is.null(until)) until_case <- until[i]
     if (is.null(exposition)) exposition_case <- NULL
     if (!is.null(exposition)) exposition_case <- exposition[[i]]
-    case <- effectiveness(accidents = accidents[[i]], measure_start = measure_start[i], measure_end = measure_end[i],
-                          exposition = exposition_case, main=paste(main, i), from = from_case, until = until_case, lang = lang,
-                          add_exp = add_exp)
+    case <- try(effectiveness(accidents = accidents[[i]], measure_start = measure_start[i], measure_end = measure_end[i],
+                          exposition = exposition_case, main=paste(main_loc, i), from = from_case, until = until_case, lang = lang,
+                          add_exp = add_exp))
+    if (is(case)[1] ==  "try-error") stop(paste0("Error in location ", i, "."))
     before_length[i] <- dim(case$data[case$data$measure=="before" & !is.na(case$data$accidents), ])[1]
     after_length[i] <- dim(case$data[case$data$measure=="after" & !is.na(case$data$accidents), ])[1]
     assign(paste0("case_",i), case)

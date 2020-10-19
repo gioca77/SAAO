@@ -25,7 +25,7 @@ effectiveness(
 
 \item{measure_start}{At which date the implementation of the measure started (e.g. character '22.4.2014' or R date/time).}
 
-\item{measure_end}{At which date the implementation of the measure was terminated (respectively first day after the measure finished).}
+\item{measure_end}{At which date the implementation of the measure was terminated (respectively first day after the measure finished). If there is a period of acclimatization until road users have become accustomed to the new traffic regime, this can or should be integrated here.}
 
 \item{exposition}{Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. DEFAULT NULL.}
 

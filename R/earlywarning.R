@@ -410,7 +410,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
                                 values = c("1"="orange"),
                                 labels = paste0(pred.level*100, "% prediction interval"))
   if (lang == "de" & is.null(pred.level)) p <- p + ggplot2::ylab("Unfaelle")+
-    ggplot2::scale_color_manual(name = "Jaehrlichkeit",
+    ggplot2::scale_color_manual(name = "Wiederkehrperiode",
                                 values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
                                 labels = c("5-jaehriges Ereignis", "10-jaehriges Ereignis", "20-jaehriges Ereignis", "100-jaehriges Ereignis"))
   if (lang == "de" & !is.null(pred.level)) p <- p +

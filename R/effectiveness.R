@@ -8,7 +8,7 @@
 #'
 #' @param accidents Either an R date/time or character vector with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.
 #' @param measure_start At which date the implementation of the measure started (e.g. character '22.4.2014' or R date/time).
-#' @param measure_end At which date the implementation of the measure was terminated (respectively first day after the measure finished).
+#' @param measure_end At which date the implementation of the measure was terminated (respectively first day after the measure finished). If there is a period of acclimatization until road users have become accustomed to the new traffic regime, this can or should be integrated here.
 #' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. DEFAULT NULL.
 #' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until what date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
@@ -337,16 +337,19 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
                           data.frame(Date=after[length(after)], accidents=NA, measure=factor("after", levels=c("before", "after"))))
   }
   if (!is.null(exposition)){
-    before_bor <- data.frame(Date=before, measure=factor("before", levels=c("before", "after")), Exp=approx(x=dat_before$Date, y=dat_before$Exp, xout=before, rule=2 )$y)
-    after_bor <- data.frame(Date=after, measure=factor("after", levels=c("before", "after")), Exp=approx(x=dat_after$Date, y=dat_after$Exp, xout=after, rule=2 )$y)
+    before_bor <- data.frame(Date=before, measure=factor("before", levels=c("before", "after")),
+                             Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=before, rule=2 )$y)
+    after_bor <- data.frame(Date=after, measure=factor("after", levels=c("before", "after")),
+                            Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=after, rule=2 )$y)
     expect_before <- rbind(data.frame(Date=before[1], accidents=NA, measure=factor("before", levels=c("before", "after")),
-                                      Exp=approx(x=dat_before$Date, y=dat_before$Exp, xout=before[1], rule=2)$y),
-                           dat_before, data.frame(Date=measure_start, accidents=NA, measure=factor("before", levels=c("before", "after")),
-                                                  Exp=approx(x=dat_before$Date, y=dat_before$Exp, xout=measure_start, rule=2)$y))
+                                      Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=before[1], rule=2)$y),
+                           dat_before, data.frame(Date=measure_start, accidents=NA,
+                                                  measure=factor("before", levels=c("before", "after")),
+                                                  Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=measure_start, rule=2)$y))
     expect_after <- rbind(data.frame(Date=measure_end, accidents=NA, measure=factor("after", levels=c("before", "after")),
-                                     Exp=approx(x=dat_after$Date, y=dat_after$Exp, xout=measure_end, rule=2)$y), dat_after,
+                                     Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=measure_end, rule=2)$y), dat_after,
                           data.frame(Date=after[length(after)], accidents=NA, measure=factor("after", levels=c("before", "after")),
-                                     Exp=approx(x=dat_after$Date, y=dat_after$Exp, xout=after[length(after)], rule=2)$y))
+                                     Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=after[length(after)], rule=2)$y))
   }
   ## Combine original data with the calculated data
   dat_model$rownames <- rownames(dat_model)
@@ -382,6 +385,9 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     after_bor$upp <- lambda_est
     expect_after$upp <- lambda_est
     bef <- data.frame(measure=factor("before", levels=c("before", "after")), Date=measure_mean)
+    if (!is.null(exposition)){
+      bef$Exp <- dat_before$Exp[length(dat_before$Exp)]
+    }
     preds_bef <- try(predict(fit, type="link", newdata = bef, se.fit = TRUE), silent=silent)
     if (is(preds_bef)[1]!="try-error"){
       i_v <- exp(preds_bef$fit-1*qnorm(intervalle)*preds_bef$se.fit)
