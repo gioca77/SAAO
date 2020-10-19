@@ -449,7 +449,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
 #' @method print class_earlywarning
 #' @export
 
-"print.class_earlywarning" <- function(object)
+"print.class_earlywarning" <- function(object, plot = TRUE)
 {
   if (!inherits(object, "class_earlywarning"))
   {
@@ -500,7 +500,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     od <- "overdispersion"
     rp <- paste0("evento dei ", rp_w, " anni")
   }
-  print(object$plot)
+  if (plot) print(object$plot)
   if (is.null(object$pred.level)){
     cat(rp)
   }

@@ -222,7 +222,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
 #' @method print class_effectiveness_multi
 #' @export
 
-"print.class_effectiveness_multi" <- function(object)
+"print.class_effectiveness_multi" <- function(object, plot = TRUE)
 {
   if (!inherits(object, "class_effectiveness_multi"))
   {
@@ -234,6 +234,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
   measure <- "Effect of measures"
   min_model <- which(object$modelname==modelname)
   if (object$lang == "en"){
+    locations <- paste("Evaluation of the combined measure effect from", object$cases, "locations.")
     model <- "model"
     nb <- "Negative binomial"
     pv <- "p-value"
@@ -244,6 +245,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
                    "Massnahmeneffekt", "Trend", "kein Effekt")
     reliability <- c("nicht verlaesslich, keine Wirkung nachgewiesen", "stark verlaesslich", "gut verlaesslich", "schwach verlaesslich")
     measure <- "Massnahmeneffekt"
+    locations <- paste("Evaluation des kombinierten Massnahmeneffektes von", object$cases, "Standorten.")
     model <- "Modell"
     nb <- "Negative Binomial"
     pv <- "p-Wert"
@@ -254,6 +256,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
                    "Effet des mesures", "Tendance", "aucun effet")
     reliability <- c("pas fiable, pas d'effet prouve", "tres fiable", "assez fiable", "faiblement fiable")
     measure <- "Effet des mesures"
+    locations <- paste("Evaluation of the combined measure effect from", object$cases, "locations.")
     model <- "model"
     nb <- "binomiale negative"
     pv <- "valeur p"
@@ -264,6 +267,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
                    "Effetto delle misure", "Tendenza", "nessun effett")
     reliability <- c("non affidabile, nessun effett provato", "altamente affidabile", "altamente affidabile",
                      "debolmente affidabile")
+    locations <- paste("Evaluation of the combined measure effect from", object$cases, "locations.")
     measure <- "Effetto delle misure"
     model <- "modello"
     nb <- "binomiale negativa"
@@ -297,8 +301,9 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
       k <- 4
     } else k <- 1
   }
-  print(object$plot)
-  cat(modelname[min_model])
+  if (plot) print(object$plot)
+  cat(locations)
+  cat("\n", modelname[min_model])
   if (!is.null(object$fit$theta))
   {
     cat("\n", paste(nb, model, "(Theta =", round(object$fit$theta, 2), ")"))

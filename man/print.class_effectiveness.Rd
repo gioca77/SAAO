@@ -4,7 +4,7 @@
 \alias{print.class_effectiveness}
 \title{Function to print class effectiveness}
 \usage{
-\method{print}{class_effectiveness}(object)
+\method{print}{class_effectiveness}(object, plot = TRUE)
 }
 \description{
 Function to print class effectiveness

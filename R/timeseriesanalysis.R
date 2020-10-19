@@ -341,7 +341,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
 #' @method plot class_timeseriesanalyis
 #' @export
 
-"print.class_timeseriesanalyis" <- function(object)
+"print.class_timeseriesanalyis" <- function(object, plot = TRUE)
 {
   if (!inherits(object, "class_timeseriesanalyis"))
   {
@@ -402,7 +402,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
           {
           k <- 4
           } else k <- 1
-  print(object$plot)
+  if (plot) print(object$plot)
   if (!is.null(object$fit$theta))
     {
     cat(paste(nb, model, "(Theta =", round(object$fit$theta, 2), ")"))

@@ -4,7 +4,7 @@
 \alias{print.class_effectiveness_multi}
 \title{Function to print class_effectiveness_multi}
 \usage{
-\method{print}{class_effectiveness_multi}(object)
+\method{print}{class_effectiveness_multi}(object, plot = TRUE)
 }
 \description{
 Function to print class_effectiveness_multi

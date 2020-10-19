@@ -222,12 +222,13 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       dat_after$Exp[i] <- mean(tab$Exp[tab$Date >= after[i] & tab$Date < after[i+1]])
     }
   }
-  #  approx(x=exposition$time, y=exposition$Exp, xout=seq(from, until, 1))
   dat_model <- rbind(dat_before, dat_after)
   during <- sum(accidents >= measure_start & accidents <= measure_end)
   measure_length <-  as.numeric(difftime(measure_end, measure_start, units="days")/365)
   ## check if time before and after measure
-  if (sum(table(dat_model$measure)!=0)==1) stop("No accident data before or after the measure.")
+  if (sum(table(dat_model$measure)!=0)==1) stop("No data before or after the measure.")
+  if (sum(dat_model$accident>0)< 2) stop("Less than 2 years with accident values. No stable estimation of the confidence intervals.")
+  if (sum(dat_model$accident[dat_model$measure=="before"]>0) < 1) stop("No usable accidents before the measure.")
   if (is.null(exposition)){
     ## model measure and trend effect
     fit1 <- glm(accidents~Date*measure, data=dat_model, family = "poisson")
@@ -267,7 +268,6 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       stop("With this data none of the models can be calculated!")
     modelname <- c("measure and trend effect", "trend effect", "measure effect and trend",
                    "measure effect", "trend", "no effect")[min_model]
-    fit <- get(paste("fit", min_model, sep=""))
   }
   fit <- get(paste("fit", min_model, sep=""))
   test_overdisp <- 1-pchisq(deviance(fit),df.residual(fit))
@@ -443,7 +443,8 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   if (!is.null(exposition)){
     if (is.null(max_y)) max_y <- max(dat_total$expect/dat_total$Exp, dat_total$accidents/dat_total$Exp,
-                                     before_bor$upp/before_bor$Exp, after_bor$upp/after_bor$Exp, na.rm=TRUE)*1.1
+                                     before_bor$upp/before_bor$Exp[before_bor$upp!=Inf],
+                                     after_bor$upp/after_bor$Exp[after_bor$upp!=Inf], na.rm=TRUE)*1.1
     scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
     p <- ggplot2::ggplot(dat_total, ggplot2::aes(x=Date, y=accidents/Exp* scal)) +
       ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
@@ -550,7 +551,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
 #' @method print class_effectiveness
 #' @export
 
-"print.class_effectiveness" <- function(object)
+"print.class_effectiveness" <- function(object, plot = TRUE)
 {
   if (!inherits(object, "class_effectiveness"))
   {
@@ -625,7 +626,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       k <- 4
     } else k <- 1
   }
-  print(object$plot)
+  if (plot) print(object$plot)
   cat(modelname[min_model])
   if (!is.null(object$fit$theta))
   {
