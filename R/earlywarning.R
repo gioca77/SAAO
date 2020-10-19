@@ -9,9 +9,9 @@
 #' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. DEFAULT NULL.
 #' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until what date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
-#' @param n Number of simulations
+#' @param n Number of simulations.
 #' @param pred.level Level of the prediction interval, if NULL (default) an interval with return periods is constructed
-#' @param alternative A character string specifying if the return period / prediction interval are calculate one or two sidet, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.
+#' @param alternative A character string specifying if the return period / prediction interval are calculate one or two sided, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.
 #' @param main Optional title for the plot.
 #' @param x_axis Optional vector with the values for the x-axis.
 #' @param max_y Optional maximum value for the y-axis.
@@ -103,7 +103,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   }
   Check <- newArgCheck_sep()
   #* accidents format
-  if (is(accidents)[1]==  "try-error")
+  if (methods::is(accidents)[1]==  "try-error")
     addError_sep(
       msg = "'accidents' not in the right format",
       argcheck = Check
@@ -116,7 +116,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
         argcheck = Check
       )
     #* exposition time format
-    if (is(exposition)[1]==  "try-error")
+    if (methods::is(exposition)[1]==  "try-error")
       addError_sep(
         msg = "wrong time format for 'exposition'",
         argcheck = Check
@@ -128,12 +128,12 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       argcheck = Check)
   }
   #* from time format
-  if (is(from)[1]==  "try-error")
+  if (methods::is(from)[1]==  "try-error")
     addError_sep(
       msg = "wrong time format for 'from'",
       argcheck = Check)
   #* until time format
-  if (is(until)[1]==  "try-error")
+  if (methods::is(until)[1]==  "try-error")
     addError_sep(
       msg = "wrong time format for 'until'",
       argcheck = Check)
@@ -145,7 +145,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
         argcheck = Check)
     }
   #* check until > from
-  if (is(from)[1]=="Date" & is(until)[1]=="Date"){
+  if (methods::is(from)[1]=="Date" & methods::is(until)[1]=="Date"){
     if (from > until)
       addError_sep(msg = "'until has to be greater than from'",
                    argcheck = Check)
@@ -172,7 +172,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   ## add exposition to data
   if (!is.null(exposition)){
     tab <- data.frame(Date=seq(from, until, 1), Exp = exposition$Exp[1])
-    if (is(exposition$time)[1] == "Date"){
+    if (methods::is(exposition$time)[1] == "Date"){
       index <- match(tab$Date, exposition$time)
       if(length(index) > 2){
         for (i in 2:(length(index) - 1)){
@@ -195,15 +195,15 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   overdisp <- FALSE
   if (is.null(exposition)){
     ## Poisson_Modell
-    fit <- glm(accidents~Date, data=dat_model[-dim(dat_model)[1], ], family = "poisson")
+    fit <- stats::glm(accidents~Date, data=dat_model[-dim(dat_model)[1], ], family = "poisson")
     ## Test Overdispersion
-    test_overdisp <-  pchisq(sum(residuals(fit, type="pearson")^2), df=fit$df.residual, lower.tail=FALSE)
+    test_overdisp <-  stats::pchisq(sum(stats::residuals(fit, type="pearson")^2), df=fit$df.residual, lower.tail=FALSE)
     #  Devianztest: 1 - pchisq(deviance(fit),df.residual(fit))
     if (test_overdisp <= 0.05){
-      fit_start <- glm(accidents ~ Date, data=dat_model[-dim(dat_model)[1], ], family = "quasipoisson",
-                       control = glm.control(epsilon = 1e-8, maxit = 200, trace = FALSE))
+      fit_start <- stats::glm(accidents ~ Date, data=dat_model[-dim(dat_model)[1], ], family = "quasipoisson",
+                       control = stats::glm.control(epsilon = 1e-8, maxit = 200, trace = FALSE))
       fit_nb <- try(MASS::glm.nb(accidents~Date, data=dat_model[-dim(dat_model)[1], ], start=fit_start$coefficients,
-                                 control = glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent = TRUE)
+                                 control = stats::glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent = TRUE)
       if (attr(fit_nb, "class")[1] != "try-error") {
         fit <- fit_nb
       } else warning("Warning: Overdispersion in the Poisson Model, but Negative Binomial Model could not be estimated.")
@@ -211,15 +211,15 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   }
   if (!is.null(exposition)){
     ## Poisson_Modell
-    fit <- glm(accidents ~ Date + offset(log(Exp)), data = dat_model[-dim(dat_model)[1], ], family = "poisson")
+    fit <- stats::glm(accidents ~ Date + offset(log(Exp)), data = dat_model[-dim(dat_model)[1], ], family = "poisson")
     ## Test Overdispersion
-    test_overdisp <- pchisq(sum(residuals(fit, type="pearson")^2), df=fit$df.residual, lower.tail=FALSE)
+    test_overdisp <- stats::pchisq(sum(stats::residuals(fit, type="pearson")^2), df=fit$df.residual, lower.tail=FALSE)
     #  Devianztest: 1 - pchisq(deviance(fit),df.residual(fit))
     if (test_overdisp <= 0.05){
-      fit_start <- glm(accidents ~ Date + offset(log(Exp)), data=dat_model[-dim(dat_model)[1], ], family = "quasipoisson",
-                       control = glm.control(epsilon = 1e-8, maxit = 200, trace = FALSE))
+      fit_start <- stats::glm(accidents ~ Date + offset(log(Exp)), data=dat_model[-dim(dat_model)[1], ], family = "quasipoisson",
+                       control = stats::glm.control(epsilon = 1e-8, maxit = 200, trace = FALSE))
       fit_nb <- try(MASS::glm.nb(accidents ~ Date + offset(log(Exp)), data=dat_model[-dim(dat_model)[1], ], start=fit_start$coefficients,
-                                 control = glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent=TRUE)
+                                 control = stats::glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent=TRUE)
       if (attr(fit_nb, "class")[1] != "try-error")
       {
         fit <- fit_nb
@@ -227,15 +227,15 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       } else warning("Warning: Overdispersion in the Poisson Model, but Negative Binomial Model could not be estimated.")
     }
   }
-  pred_new <- predict(fit, newdata=dat_model[dim(dat_model)[1], ], se.fit=TRUE, type="link")
-  samp <- rnorm(n,  mean=pred_new$fit, sd=pred_new$se.fit)
+  pred_new <- stats::predict(fit, newdata=dat_model[dim(dat_model)[1], ], se.fit=TRUE, type="link")
+  samp <- stats::rnorm(n,  mean=pred_new$fit, sd=pred_new$se.fit)
   if (!is.null(fit$theta))
   {
-    y_int <- rnbinom(n, mu=exp(samp), size = summary(fit)$theta)
+    y_int <- stats::rnbinom(n, mu=exp(samp), size = summary(fit)$theta)
   }
   if (is.null(fit$theta))
   {
-    y_int <- rpois(n, lambda = exp(samp))
+    y_int <- stats::rpois(n, lambda = exp(samp))
   }
   if (!is.null(pred.level)){
     if (alternative == "two.sided") {
@@ -250,24 +250,24 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       lp <- 1 - pred.level
       up <- 1
     }
-    ci <- as.data.frame(matrix(quantile(y_int, c(lp, up), na.rm=TRUE),  nrow=1))
+    ci <- as.data.frame(matrix(stats::quantile(y_int, c(lp, up), na.rm=TRUE),  nrow=1))
   }
   if (is.null(pred.level)){
     if (alternative == "two.sided") quant <- c(0.005, 0.995, 0.025, 0.975,0.05, 0.95, 0.1, 0.9)
     if (alternative == "greater") quant <- c(0, 0.99, 0, 0.95, 0, 0.9, 0, 0.8)
     if (alternative == "less") quant <- c(0.01, 1, 0.05, 1, 0.1, 1, 0.2, 1)
-    ci <- as.data.frame(matrix(data=quantile(y_int, quant, na.rm=TRUE), nrow=4, byrow=T))
+    ci <- as.data.frame(matrix(data=stats::quantile(y_int, quant, na.rm=TRUE), nrow=4, byrow=T))
   }
   colnames(ci)[1:2] <- c("min", "max")
   ci$Date <- dat_model[dim(dat_model)[1], "Date"]
   ci$level <- factor(dim(ci)[1]:1, levels = 1:dim(ci)[1])
   ci$size <- c(1, 1.2, 1.4, 1.6)[1:dim(ci)[1]]
   dat_fit <- NULL
-  preds <- predict(fit, type= "link", se.fit = TRUE)
+  preds <- stats::predict(fit, type= "link", se.fit = TRUE)
   dat_fit <- data.frame(Date = fit$model$Date,
                         expect = exp(preds$fit),
-                        low = exp(preds$fit-qnorm(0.975)*preds$se.fit),
-                        upp = exp(preds$fit+qnorm(0.975)*preds$se.fit))
+                        low = exp(preds$fit-stats::qnorm(0.975)*preds$se.fit),
+                        upp = exp(preds$fit+stats::qnorm(0.975)*preds$se.fit))
   if(sum(dat_fit$upp != Inf) != 0){
     if (alternative == "greater") extremer_cases <- sum(y_int>dat_model[dim(dat_model)[1], "accidents"], na.rm=TRUE)
     if (alternative == "less") extremer_cases <- sum(y_int<dat_model[dim(dat_model)[1], "accidents"], na.rm=TRUE)
@@ -285,17 +285,17 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     lambda_est <- -log(q_Jahr)
     dat_fit$upp <- lambda_est
     if (!is.null(pred.level)){
-      ci[1, 1:2] <- c(0, qpois(pred.level, lambda_est))
+      ci[1, 1:2] <- c(0, stats::qpois(pred.level, lambda_est))
     }
     if (is.null(pred.level)){
       if (alternative == "two.sided") quant <- c(0.005, 0.995, 0.025, 0.975,0.05, 0.95, 0.1, 0.9)
       if (alternative == "greater") quant <- c(0, 0.99, 0, 0.95, 0, 0.9, 0, 0.8)
       if (alternative == "less") quant <- c(0.01, 1, 0.05, 1, 0.1, 1, 0.2, 1)
-      ci[, 1:2] <- as.data.frame(matrix(data=qpois(quant, lambda_est), nrow=4, byrow=T))
+      ci[, 1:2] <- as.data.frame(matrix(data=stats::qpois(quant, lambda_est), nrow=4, byrow=T))
     }
-    if (alternative == "greater") return_period <- 1/(1-ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
-    if (alternative == "less") return_period <- 1/(ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
-    if (alternative == "two.sided") return_period <- 1/(1-ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
+    if (alternative == "greater") return_period <- 1/(1-stats::ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
+    if (alternative == "less") return_period <- 1/(stats::ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
+    if (alternative == "two.sided") return_period <- 1/(1-stats::ppois(dat_model[dim(dat_model)[1], "accidents"], lambda_est))
     if(return_period > 1/(1/n)) return_period <- paste(">", 1/(1/n))
     warning(paste0("Since all values are 0, the prediction interval cannot be determined by simulation. Estimation by quantile of the Poisson distribution."))
   }
@@ -308,7 +308,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   if (is.null(x_axis)) x_axis <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric(format(until, '%Y'))+1), "-01-01"))
   if (is.null(main)){
     if (lang == "en") main <- paste("Early Warning System")
-    if (lang == "de") main <- paste("Frühwarnsystem")
+    if (lang == "de") main <- paste("Fruehwarnsystem")
     if (lang == "fr") main <- paste("Systeme d'alerte precoce", from, "-", until, sep=" ")
     if (lang == "it") main <- paste("Sistema di allarme rapido", from, "-", until, sep=" ")
   }
@@ -354,16 +354,16 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       ggplot2::geom_line() +
       ggplot2::geom_point()  +
       ggplot2::geom_segment(data=ci, ggplot2::aes(y = min/ dat_model$Exp[length(dat_model$Exp)] * scal,
-                                                  x = Date, yend=max/ dat_model$Exp[length(dat_model$Exp)] * scal,
-                                                  xend=Date, col=level), size=ci$size)
+                                                  x = Date, yend = max/ dat_model$Exp[length(dat_model$Exp)] * scal,
+                                                  xend = Date, col = level), size = ci$size)
     if (alternative != "less") p <- p +
       ggplot2::geom_segment(data=ci, ggplot2::aes(y = min/ dat_model$Exp[length(dat_model$Exp)] * scal,
-                                                  x = Date, yend=max/ dat_model$Exp[length(dat_model$Exp)] * scal,
-                                                  xend=Date, col=level), size=ci$size)
+                                                  x = Date, yend = max/ dat_model$Exp[length(dat_model$Exp)] * scal,
+                                                  xend = Date, col = level), size = ci$size)
     if (alternative == "less") p <- p +
       ggplot2::geom_segment(data=ci, ggplot2::aes(y = min/ dat_model$Exp[length(dat_model$Exp)] * scal,
-                                                  x = Date, yend= max_y,
-                                                  xend=Date, col=level), size=ci$size)
+                                                  x = Date, yend = max_y,
+                                                  xend = Date, col = level), size = ci$size)
     p <- p +
       ggplot2::geom_line() +
       ggplot2::geom_point(data=dat_total[dat_total$Date == max(dat_total$Date),],
@@ -539,8 +539,10 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   print(object$plot)
 }
 
+
 #' @method summary class_earlywarning
 #' @export
+
 "summary.class_earlywarning" <- function(object)
 {
   if (!inherits(object, "class_earlywarning"))

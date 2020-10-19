@@ -29,6 +29,7 @@
 #' \item{\code{plot}}{Plot graphical analysis (ggplot-class).}
 #' \item{\code{plot_all}}{List with plots with the analysis of all the individuell locations. Can be visualized with the function \code{\link[STAAD:plot_all]{plot_all()}}.}
 #' \item{\code{cases}}{Number of analyzed locations.}
+#' \item{\code{cases_exp}}{Number of locations with exposition data.}
 #' \item{\code{plot_KI}}{Additional illustration with the 95\% confidence interval for the measure effect (ggplot-class).}
 #' \item{\code{conf_limit}}{Overlapping of the confidence intervals before and after the measure.}
 #' \item{\code{lang}}{Selected language.}
@@ -51,7 +52,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
   ## internal parameters
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
-  if (is(accidents)[1] == "list"){
+  if (methods::is(accidents)[1] == "list"){
     len <- length(accidents)
   } else len <- 1
   if (length(measure_start) == 1) measure_start <- rep(measure_start, len)
@@ -67,22 +68,22 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
   Check <- newArgCheck_sep()
   #* accidents format
   for (i in 1:len){
-    if (is(accidents[[i]])[1] ==  "try-error")
+    if (methods::is(accidents[[i]])[1] ==  "try-error")
       addError_sep(msg = paste0("'accidents' [[", i, "]] not in the right format"), argcheck = Check)
   }
   #* measure_start format
-  if (is(measure_start)[1] ==  "try-error")
+  if (methods::is(measure_start)[1] ==  "try-error")
     addError_sep(msg = "wrong time format for 'measure_start'", argcheck = Check)
   if (length(measure_start) !=  len)
     addError_sep(msg = "not the right amount of values for 'measure_start'", argcheck = Check)
   #* measure_end format
-  if (is(measure_end)[1] ==  "try-error")
+  if (methods::is(measure_end)[1] ==  "try-error")
     addError_sep(msg = "wrong time format for 'measure_end'", argcheck = Check)
   if (length(measure_end) !=  len)
     addError_sep(msg = "not the right amount of values for 'measure_end'", argcheck = Check)
   ## check optional input
   if (!is.null(exposition)){
-    if (is(exposition)[1] != "list") exposition <- rep(list(exposition), len)
+    if (methods::is(exposition)[1] != "list") exposition <- rep(list(exposition), len)
     for (i in 1:length(exposition)){
       if (!is.null(dim(exposition[[i]]))){
         if (dim(exposition[[i]])[2] >= 2){
@@ -128,18 +129,18 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
     }
   }
   #* from time format
-  if (is(from)[1] ==  "try-error")
+  if (methods::is(from)[1] ==  "try-error")
     addError_sep(msg = "wrong time format for 'from'", argcheck = Check)
   #* until time format
-  if (is(until)[1] ==  "try-error")
+  if (methods::is(until)[1] ==  "try-error")
     addError_sep(msg = "wrong time format for 'until'", argcheck = Check)
   #* check until > from
-  if (is(from)[1]=="Date" & is(until)[1]=="Date"){
+  if (methods::is(from)[1]=="Date" & methods::is(until)[1]=="Date"){
     if (any(from > until))
       addError_sep(msg = "'until' has to be greater then 'from'", argcheck = Check)
   }
   #* check measure_end >= measure_start
-  if (is(measure_end)[1]=="Date" & is(measure_start)[1]=="Date"){
+  if (methods::is(measure_end)[1]=="Date" & methods::is(measure_start)[1]=="Date"){
     if (any(measure_start > measure_end))
       addError_sep(msg = "'measure_end' has to be greater or equal then 'measure_start'", argcheck = Check)
   }
@@ -162,7 +163,9 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
     case <- try(effectiveness(accidents = accidents[[i]], measure_start = measure_start[i], measure_end = measure_end[i],
                           exposition = exposition_case, main=paste(main_loc, i), from = from_case, until = until_case, lang = lang,
                           add_exp = add_exp))
-    if (is(case)[1] ==  "try-error") stop(paste0("Error in location ", i, "."))
+    if (methods::is(case)[1] ==  "try-error") {
+      stop(paste0("Error in location ", i, "."))
+    }
     before_length[i] <- dim(case$data[case$data$measure=="before" & !is.na(case$data$accidents), ])[1]
     after_length[i] <- dim(case$data[case$data$measure=="after" & !is.na(case$data$accidents), ])[1]
     assign(paste0("case_",i), case)
@@ -175,13 +178,15 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
     before_exp <- rep(0, min(before_length))
     after_exp <- rep(0, min(after_length))
   }
+  len_exp <- 0
   for(i in 1:len){
     out <- get(paste0("case_",i))
     before_total <- before_total + out$data$accidents[out$data$measure=="before" &
                                                         !is.na(out$data$accidents)][(before_length[i] - min(before_length)+1):before_length[i]]
     after_total <- after_total + out$data$accidents[out$data$measure=="after" &
                                                       !is.na(out$data$accidents)][1:min(after_length)]
-    if (!is.null(exposition)){
+    if (!is.null(exposition) & !is.null(out$data$Exp)){
+      len_exp <- len_exp + 1
       before_exp <- before_exp +  out$data$Exp[out$data$measure=="before" &
                                                      !is.na(out$data$accidents)][(before_length[i] - min(before_length)+1):before_length[i]]
       after_exp <- after_exp +  out$data$Exp[out$data$measure=="after" &
@@ -204,21 +209,21 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
   dat <- total$data[2:(dim(total$dat)[1]-1),]
   dat$Date <- c(1:min(before_length), rep(min(before_length)+0.5,2), (min(before_length+1):(min(before_length)+min(after_length))))
   colnames(dat)[1] <- "Year"
-  if (!add_exp | is.null(exposition)) output <- list(fit = total$fit, modelname = total$modelname, data = data,  pvalue_measure= total$pvalue_measure,
+  if (!add_exp | is.null(exposition)) output <- list(fit = total$fit, modelname = total$modelname, data = total$data,  pvalue_measure= total$pvalue_measure,
                                                      pvalue_trend = total$pvalue_trend,  pvalue_interaction = total$pvalue_interaction,
                                                      test_overdisp = total$test_overdisp, plot = total$plot, plot_all = plot_all, cases = len,
-                                                     plot_KI = total$plot_KI, conf_limit = total$conf_limit, lang = total$lang)
-  if (add_exp & !is.null(exposition)) output <- list(fit = total$fit, modelname = total$modelname, data = data,  pvalue_measure= total$pvalue_measure,
+                                                     cases_exp = len_exp, plot_KI = total$plot_KI, conf_limit = total$conf_limit,
+                                                     lang = total$lang)
+  if (add_exp & !is.null(exposition)) output <- list(fit = total$fit, modelname = total$modelname, data = total$data,  pvalue_measure= total$pvalue_measure,
                                                      pvalue_trend = total$pvalue_trend,  pvalue_interaction = total$pvalue_interaction,
                                                      test_overdisp = total$test_overdisp, plot = total$plot, plot_all = plot_all, cases = len,
-                                                     plot_KI = total$plot_KI, conf_limit = total$conf_limit, lang = total$lang,
-                                                     plot_exposition = total$plot_exposition)
+                                                     cases_exp = len_exp, plot_KI = total$plot_KI, conf_limit = total$conf_limit,
+                                                     lang = total$lang, plot_exposition = total$plot_exposition)
   class(output) <- "class_effectiveness_multi"
   return(output)
 }
 
-#' Function to print class_effectiveness_multi
-#'
+
 #' @method print class_effectiveness_multi
 #' @export
 
@@ -235,6 +240,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
   min_model <- which(object$modelname==modelname)
   if (object$lang == "en"){
     locations <- paste("Evaluation of the combined measure effect from", object$cases, "locations.")
+    exp_locations <- paste0("(", object$cases_exp, " locations with exposition data.)")
     model <- "model"
     nb <- "Negative binomial"
     pv <- "p-value"
@@ -246,6 +252,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
     reliability <- c("nicht verlaesslich, keine Wirkung nachgewiesen", "stark verlaesslich", "gut verlaesslich", "schwach verlaesslich")
     measure <- "Massnahmeneffekt"
     locations <- paste("Evaluation des kombinierten Massnahmeneffektes von", object$cases, "Standorten.")
+    exp_locations <- paste0("(", object$cases_exp, " Standorte mit Expositionsdaten.)")
     model <- "Modell"
     nb <- "Negative Binomial"
     pv <- "p-Wert"
@@ -257,6 +264,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
     reliability <- c("pas fiable, pas d'effet prouve", "tres fiable", "assez fiable", "faiblement fiable")
     measure <- "Effet des mesures"
     locations <- paste("Evaluation of the combined measure effect from", object$cases, "locations.")
+    exp_locations <- paste0("(", object$cases_exp, " locations with exposition data.)")
     model <- "model"
     nb <- "binomiale negative"
     pv <- "valeur p"
@@ -268,6 +276,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
     reliability <- c("non affidabile, nessun effett provato", "altamente affidabile", "altamente affidabile",
                      "debolmente affidabile")
     locations <- paste("Evaluation of the combined measure effect from", object$cases, "locations.")
+    exp_locations <- paste0("(", object$cases_exp, " locations with exposition data.)")
     measure <- "Effetto delle misure"
     model <- "modello"
     nb <- "binomiale negativa"
@@ -303,6 +312,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
   }
   if (plot) print(object$plot)
   cat(locations)
+  if (object$cases_exp > 0) cat(exp_locations)
   cat("\n", modelname[min_model])
   if (!is.null(object$fit$theta))
   {
@@ -318,8 +328,6 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
   cat("\n")
 }
 
-#' Function to plot class_effectiveness_multi
-#'
 #' @method plot class_effectiveness_multi
 #' @export
 
@@ -332,11 +340,8 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
   print(object$plot)
 }
 
-#' Function for summary of class effectiveness_multi
-#'
 #' @method summary class_effectiveness_multi
 #' @export
-
 
 "summary.class_effectiveness_multi" <- function(object)
 {

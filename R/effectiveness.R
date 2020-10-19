@@ -108,19 +108,19 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   Check <- newArgCheck_sep()
   #* accidents format
-  if (is(accidents)[1] ==  "try-error")
+  if (methods::is(accidents)[1] ==  "try-error")
     addError_sep(
       msg = "'accidents' not in the right format",
       argcheck = Check
     )
   #* measure_start format
-  if (is(measure_start)[1] ==  "try-error")
+  if (methods::is(measure_start)[1] ==  "try-error")
     addError_sep(
       msg = "wrong time format for 'measure_start'",
       argcheck = Check
     )
   #* measure_end format
-  if (is(measure_end)[1] ==  "try-error")
+  if (methods::is(measure_end)[1] ==  "try-error")
     addError_sep(
       msg = "wrong time format for 'measure_end'",
       argcheck = Check
@@ -133,7 +133,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
         argcheck = Check
       )
     #* exposition time format
-    if (is(exposition)[1]==  "try-error")
+    if (methods::is(exposition)[1]==  "try-error")
       addError_sep(
         msg = "wrong time format for 'exposition'",
         argcheck = Check
@@ -145,24 +145,24 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       argcheck = Check)
   }
   #* from time format
-  if (is(from)[1] ==  "try-error")
+  if (methods::is(from)[1] ==  "try-error")
     addError_sep(
       msg = "wrong time format for 'from'",
       argcheck = Check
     )
   #* until time format
-  if (is(until)[1] ==  "try-error")
+  if (methods::is(until)[1] ==  "try-error")
     addError_sep(
       msg = "wrong time format for 'until",
       argcheck = Check
     )
   #* check until > from
-  if (is(from)[1]=="Date" & is(until)[1]=="Date"){
+  if (methods::is(from)[1]=="Date" & methods::is(until)[1]=="Date"){
     if (from > until)
       addError_sep(msg = "'until' has to be greater then 'from'", argcheck = Check)
   }
   #* check measure_end >= measure_start
-  if (is(measure_end)[1]=="Date" & is(measure_start)[1]=="Date"){
+  if (methods::is(measure_end)[1]=="Date" & methods::is(measure_start)[1]=="Date"){
     if (measure_start > measure_end)
       addError_sep(msg = "'measure_end' has to be greater or equal then 'measure_start'", argcheck = Check)
   }
@@ -199,7 +199,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   ## add exposition to data
   if (!is.null(exposition)){
     tab <- data.frame(Date=seq(from, until, 1), Exp=exposition$Exp[1])
-    if (is(exposition$time)[1]=="Date"){
+    if (methods::is(exposition$time)[1]=="Date"){
       index <- match(tab$Date, exposition$time)
       if(length(index)>2){
         for (i in 2:(length(index)-1)){
@@ -231,51 +231,52 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   if (sum(dat_model$accident[dat_model$measure=="before"]>0) < 1) stop("No usable accidents before the measure.")
   if (is.null(exposition)){
     ## model measure and trend effect
-    fit1 <- glm(accidents~Date*measure, data=dat_model, family = "poisson")
+    fit1 <- stats::glm(accidents~Date*measure, data=dat_model, family = "poisson")
     ## model trend effect
-    fit2 <- glm(accidents~Date+I(pmax(0,Date-as.numeric(measure_mean))), data=dat_model, family = "poisson")
+    fit2 <- stats::glm(accidents~Date+I(pmax(0,Date-as.numeric(measure_mean))), data=dat_model, family = "poisson")
     ## model measure effect and trend
-    fit3 <- glm(accidents~Date+measure, data=dat_model, family = "poisson")
+    fit3 <- stats::glm(accidents~Date+measure, data=dat_model, family = "poisson")
     ## model measure effect
-    fit4 <- glm(accidents~measure, data=dat_model, family = "poisson")
+    fit4 <- stats::glm(accidents~measure, data=dat_model, family = "poisson")
     ## model trend
-    fit5 <- glm(accidents~Date, data=dat_model, family = "poisson")
+    fit5 <- stats::glm(accidents~Date, data=dat_model, family = "poisson")
     ## model no effect
-    fit6 <- glm(accidents~1, data=dat_model, family = "poisson")
+    fit6 <- stats::glm(accidents~1, data=dat_model, family = "poisson")
     min_model <- try(max(which(c(fit1$aic, fit2$aic, fit3$aic, fit4$aic, fit5$aic, fit6$aic)==
                                  min(c(fit1$aic, fit2$aic, fit3$aic, fit4$aic, fit5$aic, fit6$aic), na.rm=TRUE))))
-    if (is(min_model)[1]=="try-error" | length(min_model)==0 | min_model == -Inf)
+    if (methods::is(min_model)[1]=="try-error" | length(min_model)==0 | min_model == -Inf)
       stop("With this data none of the models can be calculated!")
     modelname <- c("measure and trend effect", "trend effect", "measure effect and trend",
                    "measure effect", "trend", "no effect")[min_model]
   }
   if (!is.null(exposition)){
     ## model measure and trend effect
-    fit1 <- glm(accidents~Date*measure+offset(log(Exp)), data=dat_model, family = "poisson")
+    fit1 <- stats::glm(accidents~Date*measure+offset(log(Exp)), data=dat_model, family = "poisson")
     ## model trend effect
-    fit2 <- glm(accidents~Date+I(pmax(0,Date-as.numeric(measure_mean)))+offset(log(Exp)), data=dat_model, family = "poisson")
+    fit2 <- stats::glm(accidents~Date+I(pmax(0,Date-as.numeric(measure_mean)))+offset(log(Exp)), data=dat_model, family = "poisson")
     ## model measure effect and trend
-    fit3 <- glm(accidents~Date+measure+offset(log(Exp)), data=dat_model, family = "poisson")
+    fit3 <- stats::glm(accidents~Date+measure+offset(log(Exp)), data=dat_model, family = "poisson")
     ## model measure effect
-    fit4 <- glm(accidents~measure+offset(log(Exp)), data=dat_model, family = "poisson")
+    fit4 <- stats::glm(accidents~measure+offset(log(Exp)), data=dat_model, family = "poisson")
     ## model trend
-    fit5 <- glm(accidents~Date+offset(log(Exp)), data=dat_model, family = "poisson")
+    fit5 <- stats::glm(accidents~Date+offset(log(Exp)), data=dat_model, family = "poisson")
     ## model no effect
-    fit6 <- glm(accidents~1+offset(log(Exp)), data=dat_model, family = "poisson")
+    fit6 <- stats::glm(accidents~1+offset(log(Exp)), data=dat_model, family = "poisson")
     min_model <- try(max(which(c(fit1$aic, fit2$aic, fit3$aic, fit4$aic, fit5$aic, fit6$aic)==
                                  min(c(fit1$aic, fit2$aic, fit3$aic, fit4$aic, fit5$aic, fit6$aic), na.rm=TRUE))))
-    if (is(min_model)[1]=="try-error" | length(min_model)==0 | min_model == -Inf)
+    if (methods::is(min_model)[1]=="try-error" | length(min_model)==0 | min_model == -Inf)
       stop("With this data none of the models can be calculated!")
     modelname <- c("measure and trend effect", "trend effect", "measure effect and trend",
                    "measure effect", "trend", "no effect")[min_model]
   }
   fit <- get(paste("fit", min_model, sep=""))
-  test_overdisp <- 1-pchisq(deviance(fit),df.residual(fit))
+  #test_overdisp <- 1-stats::pchisq(stats::deviance(fit), stats::df.residual(fit))
+  test_overdisp <- stats::pchisq(sum(stats::residuals(fit, type="pearson")^2), df=fit$df.residual, lower.tail=FALSE)
   if (test_overdisp<=0.05){
-    fit_start <- glm(fit$formula, data=dat_model, family = "quasipoisson",
-                     control = glm.control(epsilon = 1e-8, maxit = 200, trace = FALSE))
+    fit_start <- stats::glm(fit$formula, data=dat_model, family = "quasipoisson",
+                     control = stats::glm.control(epsilon = 1e-8, maxit = 200, trace = FALSE))
     fit_nb <- try(MASS::glm.nb(fit$formula, data=dat_model, start=fit_start$coefficients,
-                         control = glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent=TRUE)
+                         control = stats::glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent=TRUE)
     if (attr(fit_nb, "class")[1] != "try-error") {
       fit <- fit_nb
     } else warning("Warning: Overdispersion in the Poisson Model, but Negative Binomial Model could not be estimated")
@@ -283,12 +284,12 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   ## p_value for the measure effect only with negative measure effect, 1-sided test-> p-value/2
   pvalue_measure <- NA
   if("measureafter" %in% rownames(summary(fit)$coefficients) & min_model!=1){
-    pvalue_measure <- ifelse(coef(summary(fit))["measureafter", 1] < 0, coef(summary(fit))["measureafter", 4]/2,NA)
+    pvalue_measure <- ifelse(stats::coef(summary(fit))["measureafter", 1] < 0, stats::coef(summary(fit))["measureafter", 4]/2,NA)
   }
   ## p_value for interaction only if the interaction term is negative
   pvalue_interaction <- NA
   if("Date:measureafter" %in% rownames(summary(fit)$coefficients)){
-    pvalue_interaction <- ifelse(coef(summary(fit))["Date:measureafter", 1]<0, coef(summary(fit))["Date:measureafter", 4]/2,NA)
+    pvalue_interaction <- ifelse(stats::coef(summary(fit))["Date:measureafter", 1]<0, stats::coef(summary(fit))["Date:measureafter", 4]/2,NA)
   }
   ## For the model with interaction, an estimation for the p-value for the measure is made over the confidence intervals.
   ## (Only if interaction term negative)
@@ -301,14 +302,14 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       bef$Exp <- dat_before$Exp[length(dat_before$Exp)]
       aft$Exp <- dat_after$Exp[1]
     }
-    preds_bef <- try(predict(fit, type="link", newdata = bef, se.fit = TRUE), silent=silent)
-    preds_aft <- try(predict(fit, type="link", newdata = aft, se.fit = TRUE), silent=silent)
+    preds_bef <- try(stats::predict(fit, type="link", newdata = bef, se.fit = TRUE), silent=silent)
+    preds_aft <- try(stats::predict(fit, type="link", newdata = aft, se.fit = TRUE), silent=silent)
     if (exp(preds_aft$fit) < exp(preds_bef$fit)){
-      if (is(preds_bef)[1]!="try-error"){
-        i_v <- exp(preds_bef$fit-1*qnorm(intervalle)*preds_bef$se.fit)
+      if (methods::is(preds_bef)[1]!="try-error"){
+        i_v <- exp(preds_bef$fit-1*stats::qnorm(intervalle)*preds_bef$se.fit)
         }
-      if (is(preds_aft)[1]!="try-error"){
-        i_n <- exp(preds_aft$fit+qnorm(intervalle)*preds_aft$se.fit)
+      if (methods::is(preds_aft)[1]!="try-error"){
+        i_n <- exp(preds_aft$fit+stats::qnorm(intervalle)*preds_aft$se.fit)
       }
       conf_limit <- intervalle[which(i_v-i_n<0)[1]-1]*100
       if(length(conf_limit) == 0) conf_limit <- "<0.1"
@@ -320,13 +321,13 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   pvalue_trend <- NA
   if("Date" %in% rownames(summary(fit)$coefficients)){
-    pvalue_trend <- coef(summary(fit))["Date", 4]
+    pvalue_trend <- stats::coef(summary(fit))["Date", 4]
   }
   ## Pearson residuals
-  dat_fit <- data.frame(pearson=residuals.glm(fit, type="pearson")>=2,
+  dat_fit <- data.frame(pearson=stats::residuals.glm(fit, type="pearson")>=2,
                         row.names=attr(fit$qr$qr, "dimnames")[[1]])
   ## expected value
-  dat_fit$expect <- predict(fit, type="response")
+  dat_fit$expect <- stats::predict(fit, type="response")
   ## calculation of confidence intervals
   if (is.null(exposition)){
     before_bor <- data.frame(Date=before, measure=factor("before", levels=c("before", "after")))
@@ -338,40 +339,40 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   if (!is.null(exposition)){
     before_bor <- data.frame(Date=before, measure=factor("before", levels=c("before", "after")),
-                             Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=before, rule=2 )$y)
+                             Exp=stats::approx(x=dat_model$Date, y=dat_model$Exp, xout=before, rule=2 )$y)
     after_bor <- data.frame(Date=after, measure=factor("after", levels=c("before", "after")),
-                            Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=after, rule=2 )$y)
+                            Exp=stats::approx(x=dat_model$Date, y=dat_model$Exp, xout=after, rule=2 )$y)
     expect_before <- rbind(data.frame(Date=before[1], accidents=NA, measure=factor("before", levels=c("before", "after")),
-                                      Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=before[1], rule=2)$y),
+                                      Exp=stats::approx(x=dat_model$Date, y=dat_model$Exp, xout=before[1], rule=2)$y),
                            dat_before, data.frame(Date=measure_start, accidents=NA,
                                                   measure=factor("before", levels=c("before", "after")),
-                                                  Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=measure_start, rule=2)$y))
+                                                  Exp=stats::approx(x=dat_model$Date, y=dat_model$Exp, xout=measure_start, rule=2)$y))
     expect_after <- rbind(data.frame(Date=measure_end, accidents=NA, measure=factor("after", levels=c("before", "after")),
-                                     Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=measure_end, rule=2)$y), dat_after,
+                                     Exp=stats::approx(x=dat_model$Date, y=dat_model$Exp, xout=measure_end, rule=2)$y), dat_after,
                           data.frame(Date=after[length(after)], accidents=NA, measure=factor("after", levels=c("before", "after")),
-                                     Exp=approx(x=dat_model$Date, y=dat_model$Exp, xout=after[length(after)], rule=2)$y))
+                                     Exp=stats::approx(x=dat_model$Date, y=dat_model$Exp, xout=after[length(after)], rule=2)$y))
   }
   ## Combine original data with the calculated data
   dat_model$rownames <- rownames(dat_model)
   dat_fit$rownames <- rownames(dat_fit)
   dat_total <- merge(x=dat_model, y=dat_fit, by="rownames", all=TRUE)
   dat_total <- dat_total[order(dat_total$Date),]
-  preds_exp_bef <- try(predict(fit, type= "link", newdata= expect_before, se.fit = TRUE))
-  preds_exp_aft <- try(predict(fit, type= "link", newdata= expect_after, se.fit = TRUE))
-  preds_before_bor <- try(predict(fit, type= "link", newdata= before_bor, se.fit = TRUE))
-  preds_after_bor <- try(predict(fit, type= "link", newdata= after_bor, se.fit = TRUE))
+  preds_exp_bef <- try(stats::predict(fit, type= "link", newdata= expect_before, se.fit = TRUE))
+  preds_exp_aft <- try(stats::predict(fit, type= "link", newdata= expect_after, se.fit = TRUE))
+  preds_before_bor <- try(stats::predict(fit, type= "link", newdata= before_bor, se.fit = TRUE))
+  preds_after_bor <- try(stats::predict(fit, type= "link", newdata= after_bor, se.fit = TRUE))
   expect_before$expect <- exp(preds_exp_bef$fit)
   expect_after$expect <-  exp(preds_exp_aft$fit)
   before_bor$expect <- exp(preds_before_bor$fit)
   after_bor$expect <- exp(preds_after_bor$fit)
-  expect_before$low <- exp(preds_exp_bef$fit-qnorm(0.975)*preds_exp_bef$se.fit)
-  expect_before$upp <- exp(preds_exp_bef$fit+qnorm(0.975)*preds_exp_bef$se.fit)
-  expect_after$low <- exp(preds_exp_aft$fit-qnorm(0.975)*preds_exp_aft$se.fit)
-  expect_after$upp <- exp(preds_exp_aft$fit+qnorm(0.975)*preds_exp_aft$se.fit)
-  before_bor$low <- exp(preds_before_bor$fit-qnorm(0.975)*preds_before_bor$se.fit)
-  before_bor$upp <- exp(preds_before_bor$fit+qnorm(0.975)*preds_before_bor$se.fit)
-  after_bor$low <- exp(preds_after_bor$fit-qnorm(0.975)*preds_after_bor$se.fit)
-  after_bor$upp <- exp(preds_after_bor$fit+qnorm(0.975)*preds_after_bor$se.fit)
+  expect_before$low <- exp(preds_exp_bef$fit-stats::qnorm(0.975)*preds_exp_bef$se.fit)
+  expect_before$upp <- exp(preds_exp_bef$fit+stats::qnorm(0.975)*preds_exp_bef$se.fit)
+  expect_after$low <- exp(preds_exp_aft$fit-stats::qnorm(0.975)*preds_exp_aft$se.fit)
+  expect_after$upp <- exp(preds_exp_aft$fit+stats::qnorm(0.975)*preds_exp_aft$se.fit)
+  before_bor$low <- exp(preds_before_bor$fit-stats::qnorm(0.975)*preds_before_bor$se.fit)
+  before_bor$upp <- exp(preds_before_bor$fit+stats::qnorm(0.975)*preds_before_bor$se.fit)
+  after_bor$low <- exp(preds_after_bor$fit-stats::qnorm(0.975)*preds_after_bor$se.fit)
+  after_bor$upp <- exp(preds_after_bor$fit+stats::qnorm(0.975)*preds_after_bor$se.fit)
   ## visualization
   if (is.null(main)) main <- paste("measure", paste(measure_mean, collapse = ","), sep=" ")
   if (is.null(x_axis)) x_axis <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric(format(until, '%Y'))+1), "-01-01"))
@@ -388,9 +389,9 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     if (!is.null(exposition)){
       bef$Exp <- dat_before$Exp[length(dat_before$Exp)]
     }
-    preds_bef <- try(predict(fit, type="link", newdata = bef, se.fit = TRUE), silent=silent)
-    if (is(preds_bef)[1]!="try-error"){
-      i_v <- exp(preds_bef$fit-1*qnorm(intervalle)*preds_bef$se.fit)
+    preds_bef <- try(stats::predict(fit, type="link", newdata = bef, se.fit = TRUE), silent=silent)
+    if (methods::is(preds_bef)[1]!="try-error"){
+      i_v <- exp(preds_bef$fit-1*stats::qnorm(intervalle)*preds_bef$se.fit)
     }
     q_Jahr_int <- (1-intervalle)^{1/faelle}
     i_n <- -log(q_Jahr_int)
@@ -546,8 +547,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   return(output)
 }
 
-#' Function to print class effectiveness
-#'
+
 #' @method print class_effectiveness
 #' @export
 
@@ -642,8 +642,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   cat("\n")
 }
 
-#' Function to plot class effectiveness
-#'
+
 #' @method plot class_effectiveness
 #' @export
 
@@ -656,8 +655,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   print(object$plot)
 }
 
-#' Function for summary of class effectiveness
-#'
+
 #' @method summary class_effectiveness
 #' @export
 

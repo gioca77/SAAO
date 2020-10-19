@@ -59,6 +59,7 @@ Specifically, the output contains a list of the following elements:
 \item{\code{plot}}{Plot graphical analysis (ggplot-class).}
 \item{\code{plot_all}}{List with plots with the analysis of all the individuell locations. Can be visualized with the function \code{\link[STAAD:plot_all]{plot_all()}}.}
 \item{\code{cases}}{Number of analyzed locations.}
+\item{\code{cases_exp}}{Number of locations with exposition data.}
 \item{\code{plot_KI}}{Additional illustration with the 95\% confidence interval for the measure effect (ggplot-class).}
 \item{\code{conf_limit}}{Overlapping of the confidence intervals before and after the measure.}
 \item{\code{lang}}{Selected language.}

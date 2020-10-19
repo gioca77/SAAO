@@ -29,11 +29,11 @@ earlywarning(
 
 \item{until}{Until what date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.}
 
-\item{n}{Number of simulations}
+\item{n}{Number of simulations.}
 
 \item{pred.level}{Level of the prediction interval, if NULL (default) an interval with return periods is constructed}
 
-\item{alternative}{A character string specifying if the return period / prediction interval are calculate one or two sidet, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.}
+\item{alternative}{A character string specifying if the return period / prediction interval are calculate one or two sided, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.}
 
 \item{main}{Optional title for the plot.}
 

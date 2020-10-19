@@ -89,7 +89,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   }
   Check <- newArgCheck_sep()
   #* accidents format
-  if (is(accidents)[1]==  "try-error")
+  if (methods::is(accidents)[1]==  "try-error")
     addError_sep(
       msg = "'accidents' not in the right format",
       argcheck = Check
@@ -102,7 +102,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
         argcheck = Check
       )
     #* exposition time format
-    if (is(exposition)[1]==  "try-error")
+    if (methods::is(exposition)[1]==  "try-error")
       addError_sep(
         msg = "wrong time format for 'exposition'",
         argcheck = Check
@@ -114,19 +114,19 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       argcheck = Check)
   }
   #* from time format
-  if (is(from)[1]==  "try-error")
+  if (methods::is(from)[1]==  "try-error")
     addError_sep(
       msg = "wrong time format for 'from'",
       argcheck = Check
     )
   #* until time format
-  if (is(until)[1]==  "try-error")
+  if (methods::is(until)[1]==  "try-error")
     addError_sep(
       msg = "wrong time format for 'until'",
       argcheck = Check
     )
   #* check until > from
-  if (is(from)[1]=="Date" & is(until)[1]=="Date"){
+  if (methods::is(from)[1]=="Date" & methods::is(until)[1]=="Date"){
     if (from > until)
       addError_sep(msg = "'until has to be greater than from'",
                    argcheck = Check)
@@ -175,15 +175,15 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   overdisp <- FALSE
   if (is.null(exposition)){
     ## Poisson_Modell
-    fit <- glm(accidents~Date, data=dat_model, family = "poisson")
+    fit <- stats::glm(accidents~Date, data=dat_model, family = "poisson")
     ## Test Overdispersion
-    test_overdisp <-  pchisq(sum(residuals(fit, type="pearson")^2), df=fit$df.residual, lower.tail=FALSE)
+    test_overdisp <-  stats::pchisq(sum(stats::residuals(fit, type="pearson")^2), df=fit$df.residual, lower.tail=FALSE)
     #  Devianztest: 1 - pchisq(deviance(fit),df.residual(fit))
     if (test_overdisp <= 0.05){
-      fit_start <- glm(accidents ~ Date, data=dat_model, family = "quasipoisson",
-                       control = glm.control(epsilon = 1e-8, maxit = 200, trace = FALSE))
+      fit_start <- stats::glm(accidents ~ Date, data=dat_model, family = "quasipoisson",
+                       control = stats::glm.control(epsilon = 1e-8, maxit = 200, trace = FALSE))
       fit_nb <- try(MASS::glm.nb(accidents~Date, data=dat_model, start=fit_start$coefficients,
-                           control = glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent = TRUE)
+                           control = stats::glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent = TRUE)
       if (attr(fit_nb, "class")[1] != "try-error") {
         fit <- fit_nb
       } else warning("Warning: Overdispersion in the Poisson Model, but Negative Binomial Model could not be estimated.")
@@ -191,15 +191,15 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   }
   if (!is.null(exposition)){
     ## Poisson_Modell
-    fit <- glm(accidents ~ Date + offset(log(Exp)), data = dat_model, family = "poisson")
+    fit <- stats::glm(accidents ~ Date + offset(log(Exp)), data = dat_model, family = "poisson")
     ## Test Overdispersion
-    test_overdisp <- pchisq(sum(residuals(fit, type="pearson")^2), df=fit$df.residual, lower.tail=FALSE)
+    test_overdisp <- stats::pchisq(sum(residuals(fit, type="pearson")^2), df=fit$df.residual, lower.tail=FALSE)
     #  Devianztest: 1 - pchisq(deviance(fit),df.residual(fit))
     if (test_overdisp <= 0.05){
-      fit_start <- glm(accidents ~ Date + offset(log(Exp)), data=dat_model, family = "quasipoisson",
-                       control = glm.control(epsilon = 1e-8, maxit = 200, trace = FALSE))
+      fit_start <- stats::glm(accidents ~ Date + offset(log(Exp)), data=dat_model, family = "quasipoisson",
+                       control = stats::glm.control(epsilon = 1e-8, maxit = 200, trace = FALSE))
       fit_nb <- try(MASS::glm.nb(accidents ~ Date + offset(log(Exp)), data=dat_model, start=fit_start$coefficients,
-                           control = glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent=TRUE)
+                           control = stats::glm.control(epsilon = 1e-6, maxit = 200, trace = FALSE)), silent=TRUE)
       if (attr(fit_nb, "class")[1] != "try-error")
       {
         fit <- fit_nb
@@ -211,11 +211,11 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     stop("Too few data for reliable estimating the model parameters")
   }
   ## Expected value
-  dat_model$expect <- predict(fit, type="response")
+  dat_model$expect <- stats::predict(fit, type="response")
   ## Calculation of confidence interval
-  preds <- predict(fit, type= "link", se.fit = TRUE)
-  dat_model$low <- exp(preds$fit - qnorm(0.975) * preds$se.fit)
-  dat_model$upp <- exp(preds$fit + qnorm(0.975) * preds$se.fit)
+  preds <- stats::predict(fit, type= "link", se.fit = TRUE)
+  dat_model$low <- exp(preds$fit - stats::qnorm(0.975) * preds$se.fit)
+  dat_model$upp <- exp(preds$fit + stats::qnorm(0.975) * preds$se.fit)
   dat_model$Date <- fit$model$Date
   if(sum(dat_model$upp != Inf) == 0){
     faelle <- dim(dat_model)[1]
@@ -226,12 +226,12 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   ## Pearson residuals for outliers and pearson-Line
   if (grepl("Negative Binomial", x=fit$family$family)){
     dat_model$pearson_line <- fit$fitted.values + 2 * sqrt(fit$fitted.values+(fit$fitted.values^2/fit$theta))
-    dat_model$pearson <- residuals.glm(fit, type="pearson")>=2
+    dat_model$pearson <- stats::residuals.glm(fit, type="pearson")>=2
     ##stats::rstandard(fit, type="pearson")>=2
   }
   if (fit$family$family=="poisson"){
     dat_model$pearson_line <- fit$fitted.values + 2 * sqrt(fit$fitted.values)
-    dat_model$pearson <- residuals.glm(fit, type="pearson")>=2
+    dat_model$pearson <- stats::residuals.glm(fit, type="pearson")>=2
   }
   dat_model$col <- 1
   if (show_outliers){
@@ -338,7 +338,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   return(output)
 }
 
-#' @method plot class_timeseriesanalyis
+#' @method print class_timeseriesanalyis
 #' @export
 
 "print.class_timeseriesanalyis" <- function(object, plot = TRUE)
@@ -416,8 +416,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   cat("\n")
 }
 
-
-#' @method print class_timeseriesanalyis
+#' @method plot class_timeseriesanalyis
 #' @export
 
 "plot.class_timeseriesanalyis" <- function(object)
