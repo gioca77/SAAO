@@ -52,9 +52,8 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
   ## internal parameters
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
-  if (methods::is(accidents)[1] == "list"){
-    len <- length(accidents)
-  } else len <- 1
+  if (methods::is(accidents)[1] != "list") accidents <- list(accidents)
+  len <- length(accidents)
   if (length(measure_start) == 1) measure_start <- rep(measure_start, len)
   if (length(measure_end) == 1) measure_end <- rep(measure_end, len)
   for (i in 1:len){
