@@ -278,6 +278,8 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "de") p <- p + ggplot2::ylab("Unfaelle")
     if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
+    if (lang == "en") p <- p + ggplot2::ylab("Accidents")
+    if (lang == "fr") p <- p + ggplot2::ylab("Accidents")
   }
   if (!is.null(exposition)){
     if (is.null(max_y)){

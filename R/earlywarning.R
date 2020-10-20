@@ -401,36 +401,35 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     }
   }
   if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
-  if (lang == "en" & is.null(pred.level)) p <- p +
+  if (lang == "en" & is.null(pred.level)) p <- p + ggplot2::ylab("Accidents") +
     ggplot2::scale_color_manual(name = "Return period",
                                 values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
                                 labels = c("5-year event", "10-year event", "20-year event", "100-year event"))
-  if (lang == "en" & !is.null(pred.level)) p <- p +
+  if (lang == "en" & !is.null(pred.level)) p <- p  + ggplot2::ylab("Accidents") +
     ggplot2::scale_color_manual(name = "",
                                 values = c("1"="orange"),
                                 labels = paste0(pred.level*100, "% prediction interval"))
-  if (lang == "de" & is.null(pred.level)) p <- p + ggplot2::ylab("Unfaelle")+
+  if (lang == "de" & is.null(pred.level)) p <- p + ggplot2::ylab("Unfaelle") +
     ggplot2::scale_color_manual(name = "Wiederkehrperiode",
                                 values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
                                 labels = c("5-jaehriges Ereignis", "10-jaehriges Ereignis", "20-jaehriges Ereignis", "100-jaehriges Ereignis"))
-  if (lang == "de" & !is.null(pred.level)) p <- p +
+  if (lang == "de" & !is.null(pred.level)) p <- p + ggplot2::ylab("Unfaelle") +
     ggplot2::scale_color_manual(name = "",
                                 values = c("1"="orange"),
                                 labels = paste0(pred.level*100, "% intervalle de fluctuation"))
-  if (lang == "fr" & is.null(pred.level)) p <- p +
+  if (lang == "fr" & is.null(pred.level)) p <- p + ggplot2::ylab("Accidents") +
     ggplot2::scale_color_manual(name = "Periode de retour",
                                 values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
                                 labels = c("evenement 5 ans", "evenement 10 ans", "venement 20 ans",  "evenement 100 ans"))
-  if (lang == "fr" & !is.null(pred.level)) p <- p +
+  if (lang == "fr" & !is.null(pred.level)) p <- p + ggplot2::ylab("Accidents") +
     ggplot2::scale_color_manual(name = "",
                                 values = c("1"="orange"),
                                 labels = paste0(pred.level*100, "% intervalle de fluctuation"))
-
   if (lang == "it" & is.null(pred.level)) p <- p + ggplot2::ylab("Incidenti") +
     ggplot2::scale_color_manual(name = "Tempo di ritorno",
                                 values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
                                 labels = c("evento dei 5 anni", "evento dei 10 anni", "evento dei 20 anni", "evento dei 100 anni"))
-  if (lang == "it" & !is.null(pred.level)) p <- p +
+  if (lang == "it" & !is.null(pred.level)) p <- p + ggplot2::ylab("Incidenti") +
     ggplot2::scale_color_manual(name = "",
                                 values = c("1"="orange"),
                                 labels = paste0(pred.level*100, "% intervallo di previsione"))
