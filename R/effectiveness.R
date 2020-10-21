@@ -314,7 +314,8 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       conf_limit <- intervalle[which(i_v-i_n<0)[1]-1]*100
       if(length(conf_limit) == 0) conf_limit <- "<0.1"
       if(is.na(conf_limit)) conf_limit <- "> 99.99"
-      pvalue_measure <- paste("No overlap of the ", conf_limit, "%-confidence interval.", sep="")
+      if (is.na(pvalue_interaction) & lang %in% c("en", "fr", "it")) pvalue_measure <- paste("No overlap of the ", conf_limit, "%-confidence intervals.", sep="")
+      if (is.na(pvalue_interaction) & lang == "de") pvalue_measure <- paste("Keine Ueberlappung der ", conf_limit, "%-Konfidenzintervalle.", sep="")
       if (is.na(pvalue_interaction) & lang %in% c("en", "fr", "it")) pvalue_measure <- paste(pvalue_measure, " !Attention the trend increases more after the measure than before!", sep="")
       if (is.na(pvalue_interaction) & lang == "de") pvalue_measure <- paste(pvalue_measure, " !Achtung der Trend steigt nach der Massnahme staerker als davor!", sep="")
     }
@@ -397,7 +398,8 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     i_n <- -log(q_Jahr_int)
     conf_limit <- intervalle[which(i_v-i_n<0)[1]-1]*100
     if(is.na(conf_limit)) conf_limit <- "> 99.99"
-    pvalue_measure <- paste("No overlap of the ", conf_limit, "%-confidence interval.", sep="")
+    if (is.na(pvalue_interaction) & lang %in% c("en", "fr", "it")) pvalue_measure <- paste("No overlap of the ", conf_limit, "%-confidence intervals.", sep="")
+    if (is.na(pvalue_interaction) & lang == "de") pvalue_measure <- paste("Keine Ueberlappung der ", conf_limit, "%-Konfidenzintervalle.", sep="")
   }
   # Base plot
   if (is.null(orientation_x)) orientation_x <- ifelse(diff(as.numeric(format(range(dat_total$Date), '%Y'))) > 8, "v", "h")
