@@ -11,8 +11,8 @@
 #' @param from Vector with dates or year (1.1.) from which the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used. Must be specified for none or all locations.  If only one value is given, it is used for all locations.
 #' @param until Vector with dates or year (31.12) until which the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used. Must be specified for none or all locations.  If only one value is given, it is used for all locations.
 #' @param main Optional title for the plot.
-#' @param x_axis Optional, points at which tick-marks are to be drawn.
 #' @param max_y Optional maximum value for the y-axis.
+#' @param min_y Optional minimum value for the y-axis, defaults to 0.
 #' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.
 #' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is available
 #' @param KI_plot TRUE/FALSE, indicating if an additional illustration with the 95\% confidence interval for the measure effect is produced (only of limited use for models without measure effect).
@@ -46,8 +46,8 @@
 
 effectiveness_multiple <- function(accidents, measure_start, measure_end,
                                    exposition = NULL, from = NULL,
-                          until = NULL, main = NULL, x_axis = NULL,
-                          max_y = NULL, orientation_x = NULL,
+                          until = NULL, main = NULL, max_y = NULL,
+                          min_y = NULL, orientation_x = NULL,
                           add_exp = FALSE, KI_plot = FALSE,  lang = "en"){
   ## internal parameters
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
@@ -203,19 +203,26 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
                                                           Exp = c(before_exp, after_exp))
   total <- effectiveness(accidents = accident_total, measure_start = as.Date(paste0(min(before_length)+1, "-01-01")),
                          measure_end = as.Date(paste0(min(before_length)+1, "-01-01")), exposition = exposition_total,
-                         x_axis = x_axis, main=main, max_y = max_y, orientation_x = orientation_x,
+                         x_axis = x_axis, main=main, max_y = max_y, min_y = min_y, orientation_x = orientation_x,
                          KI_plot = KI_plot,  lang = lang, add_exp = add_exp)
   dat <- total$data[2:(dim(total$dat)[1]-1),]
   dat$Date <- c(1:min(before_length), rep(min(before_length)+0.5,2), (min(before_length+1):(min(before_length)+min(after_length))))
   colnames(dat)[1] <- "Year"
-  if (!add_exp | is.null(exposition)) output <- list(fit = total$fit, modelname = total$modelname, data = total$data,  pvalue_measure= total$pvalue_measure,
-                                                     pvalue_trend = total$pvalue_trend,  pvalue_interaction = total$pvalue_interaction,
-                                                     test_overdisp = total$test_overdisp, plot = total$plot, plot_all = plot_all, cases = len,
-                                                     cases_exp = len_exp, plot_KI = total$plot_KI, conf_limit = total$conf_limit,
+  if (!add_exp | is.null(exposition)) output <- list(fit = total$fit, modelname = total$modelname, data = total$data,
+                                                     pvalue_measure= total$pvalue_measure,
+                                                     pvalue_trend = total$pvalue_trend,
+                                                     pvalue_interaction = total$pvalue_interaction,
+                                                     test_overdisp = total$test_overdisp, plot = total$plot,
+                                                     plot_all = plot_all, cases = len,
+                                                     cases_exp = len_exp, plot_KI = total$plot_KI,
+                                                     conf_limit = total$conf_limit,
                                                      lang = total$lang)
-  if (add_exp & !is.null(exposition)) output <- list(fit = total$fit, modelname = total$modelname, data = total$data,  pvalue_measure= total$pvalue_measure,
-                                                     pvalue_trend = total$pvalue_trend,  pvalue_interaction = total$pvalue_interaction,
-                                                     test_overdisp = total$test_overdisp, plot = total$plot, plot_all = plot_all, cases = len,
+  if (add_exp & !is.null(exposition)) output <- list(fit = total$fit, modelname = total$modelname, data = total$data,
+                                                     pvalue_measure= total$pvalue_measure,
+                                                     pvalue_trend = total$pvalue_trend,
+                                                     pvalue_interaction = total$pvalue_interaction,
+                                                     test_overdisp = total$test_overdisp, plot = total$plot,
+                                                     plot_all = plot_all, cases = len,
                                                      cases_exp = len_exp, plot_KI = total$plot_KI, conf_limit = total$conf_limit,
                                                      lang = total$lang, plot_exposition = total$plot_exposition)
   class(output) <- "class_effectiveness_multi"

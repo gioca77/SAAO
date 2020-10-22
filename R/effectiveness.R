@@ -15,6 +15,7 @@
 #' @param main Optional title for the plot.
 #' @param x_axis Optional, points at which tick-marks are to be drawn.
 #' @param max_y Optional maximum value for the y-axis.
+#' @param min_y Optional minimum value for the y-axis, defaults to 0.
 #' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.
 #' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additional plot of the exposure alone is produced. Only active if exposure is available.
 #' @param KI_plot TRUE/FALSE, indicating if an additional illustration with the 95\% confidence interval for the measure effect is produced (only of limited use for models without measure effect).
@@ -59,7 +60,7 @@
 
 
 effectiveness <- function(accidents, measure_start, measure_end, exposition = NULL, from = NULL,
-                          until = NULL, main = NULL, x_axis = NULL, max_y = NULL,
+                          until = NULL, main = NULL, x_axis = NULL, max_y = NULL, min_y = NULL,
                           orientation_x = NULL, add_exp = FALSE, KI_plot = TRUE,  lang = "en"){
   ## internal parameters
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
@@ -378,7 +379,6 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   if (is.null(main)) main <- paste("measure", paste(measure_mean, collapse = ","), sep=" ")
   if (is.null(x_axis)) x_axis <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric(format(until, '%Y'))+1), "-01-01"))
   year_format <- ifelse(measure_start>100, "%Y", "%y")
-  # if (test_conf){
   if(sum(after_bor$upp[after_bor$measure=="after"] != Inf) == 0){
     faelle <- sum(after_bor$measure=="after")
     q_Jahr <- 0.05^{1/faelle}
@@ -403,7 +403,12 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
   }
   # Base plot
   if (is.null(orientation_x)) orientation_x <- ifelse(diff(as.numeric(format(range(dat_total$Date), '%Y'))) > 8, "v", "h")
+  if (is.null(min_y)) min_y <- 0
   if (is.null(exposition)){
+    if (is.null(max_y)){
+      max_data <- c(dat_total$accidents, dat_total$upp, before_bor$upp, after_bor$upp, expect_after$upp, expect_before$upp)
+      max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
+    }
     p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents)) +
       ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=after_bor$Date, colour="darkgrey", linetype=2)+
@@ -434,7 +439,8 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       ggplot2::geom_vline(xintercept=measure_end, colour="red")+
       ggplot2::geom_vline(xintercept=measure_start, colour="red")+
       ggplot2::geom_point(x=mean(c(measure_end, measure_start)), y=during/measure_length, colour="grey", na.rm=TRUE) +
-      ggplot2::scale_y_continuous(breaks=  scales::pretty_breaks())
+      ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                  expand = c(0, 0), limits = c(min_y, max_y))
     ## Connect the measured values after the measure, if there are enough measured values
     if (sum(dat_total$Date>measure_mean)>1){
       p <- p +
@@ -447,27 +453,35 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     if (lang == "fr") p <- p + ggplot2::ylab("Accidents")
   }
   if (!is.null(exposition)){
-    if (is.null(max_y)) max_y <- max(dat_total$expect/dat_total$Exp, dat_total$accidents/dat_total$Exp,
+    if (!is.null(max_y)){
+      scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
+    }
+    if (is.null(max_y)){
+      max_y <- max(dat_total$expect/dat_total$Exp, dat_total$accidents/dat_total$Exp,
                                      before_bor$upp/before_bor$Exp[before_bor$upp!=Inf],
                                      after_bor$upp/after_bor$Exp[after_bor$upp!=Inf], na.rm=TRUE)*1.1
-    scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
+      scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
+    }
     p <- ggplot2::ggplot(dat_total, ggplot2::aes(x=Date, y=accidents/Exp* scal)) +
       ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=after_bor$Date, colour="darkgrey", linetype=2) +
-      ggplot2::geom_ribbon(data=rbind(expect_before, expect_after), ggplot2::aes(ymin=low/Exp* scal,ymax=upp/Exp* scal), fill="grey", alpha=0.5)+
-      ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format(year_format))+
+      ggplot2::geom_ribbon(data=rbind(expect_before, expect_after),
+                           ggplot2::aes(ymin=low/Exp* scal,ymax=upp/Exp* scal), fill="grey", alpha=0.5) +
+      ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format(year_format)) +
       ggplot2::ylab(paste("accident rate *", formatC(scal, format = "e", digits = 0))) +
-      ggplot2::ggtitle(main)+
+      ggplot2::ggtitle(main) +
       ggplot2::theme_bw()
     before_bor$accidents=NA
     after_bor$accidents=NA
     for (z in seq(1, dim(before_bor)[1], 2)){
       p <- p +
-        ggplot2::geom_ribbon(data=before_bor[z:(z+1),], ggplot2::aes(ymin=low/Exp* scal,ymax=upp/Exp* scal), fill="darkgrey", alpha=0.5)
+        ggplot2::geom_ribbon(data=before_bor[z:(z+1),], ggplot2::aes(ymin=low/Exp* scal,ymax=upp/Exp* scal),
+                             fill="darkgrey", alpha=0.5)
     }
     for (z in seq(1, dim(after_bor)[1], 2)){
       p <- p +
-        ggplot2::geom_ribbon(data=after_bor[z:(z+1),], ggplot2::aes(ymin=low/Exp* scal,ymax=upp/Exp* scal), fill="darkgrey", alpha=0.5)
+        ggplot2::geom_ribbon(data=after_bor[z:(z+1),], ggplot2::aes(ymin=low/Exp* scal,ymax=upp/Exp* scal),
+                             fill="darkgrey", alpha=0.5)
     }
     p <- p +
       ggplot2::geom_point() +
@@ -486,37 +500,39 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
         ggplot2::geom_line(data=dat_total[dat_total$Date>measure_mean,], ggplot2::aes(x=Date, y=accidents/Exp* scal))
     }
     if (!add_exp){
-      p <- p + ggplot2::scale_y_continuous(breaks=  scales::pretty_breaks())
+      p <- p + ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                           expand = c(0, 0), limits = c(min_y *scal, max_y * scal))
     }
     if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "de") p <- p + ggplot2::ylab(paste("Unfallrate *", formatC(scal, format = "e", digits = 0)))
     if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))
     if (lang == "it") p <- p + ggplot2::ylab(paste("Tasso di incidenti *", formatC(scal, format = "e", digits = 0)))
+    if (add_exp){
+      scal_acci <- ceiling(max(dat_total$Exp)/(max_y*scal)) * 1.05
+      p <- p+ggplot2::geom_point(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "darkgrey")+
+        ggplot2::geom_line(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "darkgrey")+
+        ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                    expand = c(0, 0), limits = c(min_y *scal, max_y * scal),
+                                    sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1, name="exposition"))
+      p3 <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=Exp)) +
+        ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
+        ggplot2::geom_vline(xintercept=after_bor$Date, colour="darkgrey", linetype=2) +
+        ggplot2::geom_line() +
+        ggplot2::geom_point()  +
+        ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                    expand = c(0, 0), limits = c(0, max(dat_total$Exp, na.rm = TRUE)*1.1))+
+        ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
+        ggplot2::ggtitle(main) +
+        ggplot2::ylab("exposition") +
+        ggplot2::theme_bw()
+      if (orientation_x == "v")  p3 <- p3 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
+      if (lang == "de") p3 <- p3 + ggplot2::ylab("Exposition")
+    }
   }
   if (lang == "de") p <- p + ggplot2::xlab("Datum")
   if (lang == "it") p <- p + ggplot2::xlab("Data")
-  if (add_exp){
-    scal_acci <- ceiling(max(dat_total$Exp)/(max_y*scal)) * 1.05
-    p <- p+ggplot2::geom_point(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "darkgrey")+
-      ggplot2::geom_line(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "darkgrey")+
-      ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
-                                  expand = c(0, 0), limits = c(0, max_y * scal),
-                                  sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1, name="exposition"))
-    p3 <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=Exp)) +
-      ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
-      ggplot2::geom_vline(xintercept=after_bor$Date, colour="darkgrey", linetype=2) +
-      ggplot2::geom_line() +
-      ggplot2::geom_point()  +
-      ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
-                                  expand = c(0, 0), limits = c(0, max(dat_total$Exp, na.rm = TRUE)*1.1))+
-      ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
-      ggplot2::ggtitle(main) +
-      ggplot2::ylab("exposition") +
-      ggplot2::theme_bw()
-    if (orientation_x == "v")  p3 <- p3 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
-    if (lang == "de") p3 <- p3 + ggplot2::ylab("Exposition")
-  }
+
   ## Additional optional plot with 95% confidence interval for measure effectiveness
   if (KI_plot){
     d <- expect_before[dim(expect_before)[1], "expect"]-expect_after[1, "expect"]

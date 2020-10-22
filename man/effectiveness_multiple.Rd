@@ -12,8 +12,8 @@ effectiveness_multiple(
   from = NULL,
   until = NULL,
   main = NULL,
-  x_axis = NULL,
   max_y = NULL,
+  min_y = NULL,
   orientation_x = NULL,
   add_exp = FALSE,
   KI_plot = FALSE,
@@ -21,7 +21,7 @@ effectiveness_multiple(
 )
 }
 \arguments{
-\item{accidents}{A list with either an R date/time or character vectors with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.}
+\item{accidents}{Either an R date/time or character vector with accident dates. For character vectors, only the following date formats are allowed: '2014-04-22', '2014/04/22', '22.4.2014'.}
 
 \item{measure_start}{A vector with the dates (R date/time as well as character in '2014-04-22', '2014/04/22' or '22.4.2014 format) when the implementation of the measure started for each location. The vector must either be the same length as the number of elements in the accident-list or contain only one value. If only one value is given, it is used for all locations.}
 
@@ -35,22 +35,22 @@ effectiveness_multiple(
 
 \item{main}{Optional title for the plot.}
 
-\item{x_axis}{Optional vector with the values for the x-axis.}
-
 \item{max_y}{Optional maximum value for the y-axis.}
+
+\item{min_y}{Optional minimum value for the y-axis, defaults to 0.}
 
 \item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.}
 
-\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is stated.}
+\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is available}
 
-\item{KI_plot}{TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect is produced (only of limited use for models without measure effect).}
+\item{KI_plot}{TRUE/FALSE, indicating if an additional illustration with the 95\% confidence interval for the measure effect is produced (only of limited use for models without measure effect).}
 
-\item{lang}{language for output ("en", "fr", "de" or "it").}
+\item{lang}{Language for output ("en", "fr", "de" or "it"), defaults to "en".}
 }
 \value{
-A specific R object (\code{class_effectiveness_multi}) is generated as function output. The main object is the illustration with a graphical analysis of the measures. The \code{print.class_effectiveness_multi()} is used to extract the most important key figures of the analysis.
+A specific R object (\code{class_effectiveness_multi}) is generated as function output. The main object is the plot with a graphical analysis of the measures. The \code{print.class_effectiveness_multi()} is used to extract the most important key figures of the analysis.
 Specifically, the output contains a list of the following elements:
-\item{\code{fit}}{Output of the selected counting regression model (Negative Binomial or Poisson family.}
+\item{\code{fit}}{Output of the selected count regression model (Poisson or Negative Binomial family.}
 \item{\code{modelname}}{Selected model.}
 \item{\code{data}}{Prepared data combined from the different locations that were used for the analysis.}
 \item{\code{pvalue_measure}}{p-value of the positive measure effect, if it exists.}
@@ -69,7 +69,7 @@ Specifically, the output contains a list of the following elements:
 Function to evaluate the effectiveness of measures to reduce traffic accidents with data from multiple locations.
 }
 \details{
-Traffic accidents before and after the implementation of a traffic measure at different locations are analyzed together to evaluate the overall effect of the measure. For the analysis, the accident data at the different locations before and after the action are added up. The implementation of the measures does not have to take place simultaneously, the data is adjusted accordingly. Before and after the measure, only the time range that is available for all locations is taken into account. This means that the site with the shortest time series before the measure and the site with the shortest time series after the measure determine the length of the evaluation period. As in the function \code{\link[STAAD:effectiveness]{effectiveness}} the counting data are modeled using count regression, by default with a Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a Negative Binomial model. For the situation analysis, six different model scenarios for the measure are evaluated:  no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset.
+Traffic accidents counts (or rates) before and after the implementation of a traffic measure at different locations are analyzed in aggregated form to evaluate the joint effect of the measure. The implementation of the measures does not have to take place simultaneously, the data is adjusted accordingly. Before and after the measure, only the time range that is available for all locations is taken into account. This means that the site with the shortest time series before the measure and the site with the shortest time series after the measure determine the length of the evaluation period. As in the function \code{\link[STAAD:effectiveness]{effectiveness()}} the count data are modelled using regression models. By default a Poisson model is used, but is tested for overdispersion and in case of significant overdispersion it is replaced with a Negative Binomial model. For the situation analysis, six different model scenarios for the measure are evaluated:  no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. Traffic volumes can optionally be added as exposure, in that case rate models will be fitted.
 }
 \examples{
   multi1 <- effectiveness_multiple(accidents = list(example_no_effect, example_measure_effect),

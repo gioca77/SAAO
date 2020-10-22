@@ -14,7 +14,8 @@
 #' @param alternative A character string specifying if the return period / prediction interval are calculated one- or two-sided, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.
 #' @param main Optional title for the plot.
 #' @param x_axis Optional, points at which tick-marks are to be drawn.
-#' @param max_y Optional maximum value for the y-axis. The y-axis always starts from a value of 0.
+#' @param max_y Optional maximum value for the y-axis.
+#' @param min_y Optional minimum value for the y-axis, defaults to 0.
 #' @param orientation_x Alignment of the tick labels on the x-axis; "v" for vertical, "h" for horizontal. By default horizontal alignment is selected for 8 years or less.
 #' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additional plot of the exposure alone is produced. Only active if exposure is available.
 #' @param lang Language for output ("en", "fr", "de" or "it"), defaults to "en".
@@ -54,8 +55,8 @@
 #'   summary(ex7)
 
 earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 1000000,
-                         pred.level = NULL, alternative = "greater",  main = NULL,  x_axis = NULL, max_y = NULL,
-                         orientation_x = NULL, add_exp = FALSE, lang = "en") {
+                         pred.level = NULL, alternative = "greater",  main = NULL,  x_axis = NULL,
+                         max_y = NULL, min_y = NULL, orientation_x = NULL, add_exp = FALSE, lang = "en") {
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
   accidents <- try(as.Date(accidents, tryFormats = c("%Y-%m-%d", "%Y/%m/%d", "%d.%m.%Y")),
@@ -306,6 +307,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   # Base plot
   if (is.null(orientation_x)) orientation_x <- ifelse(diff(as.numeric(format(range(dat_total$Date), '%Y'))) > 8, "v", "h")
   if (is.null(x_axis)) x_axis <- as.Date(paste0(as.numeric(format(from, '%Y')):(as.numeric(format(until, '%Y'))+1), "-01-01"))
+  if (is.null(min_y)) min_y <- 0
   if (is.null(main)){
     if (lang == "en") main <- paste("Early Warning System")
     if (lang == "de") main <- paste("Fruehwarnsystem")
@@ -317,7 +319,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       max_data <- c(dat_total$accidents, dat_total$expect, dat_total$low, dat_total$upp, ci$max[is.finite(ci$max)])
       max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
     }
-     p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents)) +
+    p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_ribbon(ggplot2::aes(ymin=low,ymax=upp), fill="grey", alpha=0.5) +
@@ -334,28 +336,33 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       ggplot2::geom_point(data=dat_total[dat_total$Date == max(dat_total$Date),],
                           ggplot2::aes(x = Date, y = accidents), col= col_w) +
       ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
-                                  expand = c(0, 0), limits = c(0, max_y))+
+                                  expand = c(0, 0), limits = c(min_y, max_y))+
       ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
       ggplot2::ggtitle(main) +
       ggplot2::theme_bw()
+     if (lang %in% c("en", "fr")) p <- p + ggplot2::ylab("Accidents")
+     if (lang == "de") p <- p + ggplot2::ylab("Unfaelle")
+     if (lang == "it") p <- p + ggplot2::ylab("Incidenti")
   }
   if (!is.null(exposition)){
+    if (!is.null(max_y)){
+      scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
+    }
     if (is.null(max_y)){
-      max_data <- c(dat_total$accidents/dat_total$Exp, dat_total$expect/dat_total$Exp, dat_total$low/dat_total$Exp, dat_total$upp/dat_total$Exp,
+      max_data <- c(dat_total$accidents/dat_total$Exp, dat_total$expect/dat_total$Exp, dat_total$low/dat_total$Exp,
+                    dat_total$upp/dat_total$Exp,
                     (ci$max/dat_model$Exp[length(dat_model$Exp)])[is.finite(ci$max)])
       max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
+      scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
     }
-    scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
+
     p <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=accidents / Exp* scal)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_ribbon(ggplot2::aes(ymin = low / Exp * scal, ymax = upp / Exp * scal),
                            fill="grey", alpha=0.5) +
       ggplot2::geom_line() +
-      ggplot2::geom_point()  +
-      ggplot2::geom_segment(data=ci, ggplot2::aes(y = min/ dat_model$Exp[length(dat_model$Exp)] * scal,
-                                                  x = Date, yend = max/ dat_model$Exp[length(dat_model$Exp)] * scal,
-                                                  xend = Date, col = level), size = ci$size)
+      ggplot2::geom_point()
     if (alternative != "less") p <- p +
       ggplot2::geom_segment(data=ci, ggplot2::aes(y = min/ dat_model$Exp[length(dat_model$Exp)] * scal,
                                                   x = Date, yend = max/ dat_model$Exp[length(dat_model$Exp)] * scal,
@@ -373,17 +380,13 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       ggplot2::ggtitle(main) +
       ggplot2::theme_bw()
     if (!add_exp) p <- p + ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
-                                                       expand = c(0, 0), limits = c(0, max_y*scal))
-    if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
-    if (lang == "de") p <- p + ggplot2::ylab(paste("Unfallrate *", formatC(scal, format = "e", digits = 0)))
-    if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))
-    if (lang == "it") p <- p + ggplot2::ylab(paste("Tasso di incidenti *", formatC(scal, format = "e", digits = 0)))
+                                                       expand = c(0, 0), limits = c(min_y * scal, max_y*scal))
     if (add_exp){
       scal_acci <- ceiling(max(dat_total$Exp)/(max_y*scal)) * 1.05
-      p <- p+ggplot2::geom_point(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
+      p <- p + ggplot2::geom_point(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
         ggplot2::geom_line(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
         ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
-                                    expand = c(0, 0), limits = c(0, max_y * scal),
+                                    expand = c(0, 0), limits = c(min_y * scal, max_y * scal),
                                     sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1, name="exposition"))
       p2 <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=Exp)) +
         ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
@@ -399,37 +402,41 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
       if (orientation_x == "v")  p2 <- p2 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
       if (lang == "de") p2 <- p2 + ggplot2::ylab("Exposition")
     }
+    if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
+    if (lang == "de") p <- p + ggplot2::ylab(paste("Unfallrate *", formatC(scal, format = "e", digits = 0)))
+    if (lang == "fr") p <- p + ggplot2::ylab(paste("Taux d'accidents *", formatC(scal, format = "e", digits = 0)))
+    if (lang == "it") p <- p + ggplot2::ylab(paste("Tasso di incidenti *", formatC(scal, format = "e", digits = 0)))
   }
   if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
-  if (lang == "en" & is.null(pred.level)) p <- p + ggplot2::ylab("Accidents") +
+  if (lang == "en" & is.null(pred.level)) p <- p +
     ggplot2::scale_color_manual(name = "Return period",
                                 values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
                                 labels = c("5-year event", "10-year event", "20-year event", "100-year event"))
-  if (lang == "en" & !is.null(pred.level)) p <- p  + ggplot2::ylab("Accidents") +
+  if (lang == "en" & !is.null(pred.level)) p <- p  +
     ggplot2::scale_color_manual(name = "",
                                 values = c("1"="orange"),
                                 labels = paste0(pred.level*100, "% prediction interval"))
-  if (lang == "de" & is.null(pred.level)) p <- p + ggplot2::ylab("Unfaelle") +
+  if (lang == "de" & is.null(pred.level)) p <- p +
     ggplot2::scale_color_manual(name = "Wiederkehrperiode",
                                 values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
                                 labels = c("5-jaehriges Ereignis", "10-jaehriges Ereignis", "20-jaehriges Ereignis", "100-jaehriges Ereignis"))
-  if (lang == "de" & !is.null(pred.level)) p <- p + ggplot2::ylab("Unfaelle") +
+  if (lang == "de" & !is.null(pred.level)) p <- p +
     ggplot2::scale_color_manual(name = "",
                                 values = c("1"="orange"),
                                 labels = paste0(pred.level*100, "% intervalle de fluctuation"))
-  if (lang == "fr" & is.null(pred.level)) p <- p + ggplot2::ylab("Accidents") +
+  if (lang == "fr" & is.null(pred.level)) p <- p +
     ggplot2::scale_color_manual(name = "Periode de retour",
                                 values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
                                 labels = c("evenement 5 ans", "evenement 10 ans", "venement 20 ans",  "evenement 100 ans"))
-  if (lang == "fr" & !is.null(pred.level)) p <- p + ggplot2::ylab("Accidents") +
+  if (lang == "fr" & !is.null(pred.level)) p <- p +
     ggplot2::scale_color_manual(name = "",
                                 values = c("1"="orange"),
                                 labels = paste0(pred.level*100, "% intervalle de fluctuation"))
-  if (lang == "it" & is.null(pred.level)) p <- p + ggplot2::ylab("Incidenti") +
+  if (lang == "it" & is.null(pred.level)) p <- p +
     ggplot2::scale_color_manual(name = "Tempo di ritorno",
                                 values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
                                 labels = c("evento dei 5 anni", "evento dei 10 anni", "evento dei 20 anni", "evento dei 100 anni"))
-  if (lang == "it" & !is.null(pred.level)) p <- p + ggplot2::ylab("Incidenti") +
+  if (lang == "it" & !is.null(pred.level)) p <- p +
     ggplot2::scale_color_manual(name = "",
                                 values = c("1"="orange"),
                                 labels = paste0(pred.level*100, "% intervallo di previsione"))

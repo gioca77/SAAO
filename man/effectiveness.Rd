@@ -14,6 +14,7 @@ effectiveness(
   main = NULL,
   x_axis = NULL,
   max_y = NULL,
+  min_y = NULL,
   orientation_x = NULL,
   add_exp = FALSE,
   KI_plot = TRUE,
@@ -21,11 +22,11 @@ effectiveness(
 )
 }
 \arguments{
-\item{accidents}{Either an R date/time or character vector with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.}
+\item{accidents}{Either an R date/time or character vector with accident dates. For character vectors, only the following date formats are allowed: '2014-04-22', '2014/04/22', '22.4.2014'.}
 
-\item{measure_start}{At which date the implementation of the measure started (e.g. character '22.4.2014' or R date/time).}
+\item{measure_start}{The date when the implementation of the measure started (e.g. character '22.4.2014' or R date/time).}
 
-\item{measure_end}{At which date the implementation of the measure was terminated (respectively first day after the measure finished). If there is a period of acclimatization until road users have become accustomed to the new traffic regime, this can or should be integrated here.}
+\item{measure_end}{The date when the implementation of the measure was terminated (respectively first day after the measure finished). If there is a period of acclimatization until road users have become accustomed to the new traffic regime, this can or should be integrated here.}
 
 \item{exposition}{Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. DEFAULT NULL.}
 
@@ -35,23 +36,25 @@ effectiveness(
 
 \item{main}{Optional title for the plot.}
 
-\item{x_axis}{Optional vector with the values for the x-axis.}
+\item{x_axis}{Optional, points at which tick-marks are to be drawn.}
 
 \item{max_y}{Optional maximum value for the y-axis.}
 
+\item{min_y}{Optional minimum value for the y-axis, defaults to 0.}
+
 \item{orientation_x}{Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.}
 
-\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is stated.}
+\item{add_exp}{Option to supplement the output plot with the exposure as an additional axis. Furthermore an additional plot of the exposure alone is produced. Only active if exposure is available.}
 
-\item{KI_plot}{TRUE/FALSE if an additional illustration with the 95\% confidence interval for the measure effect is produced (only of limited use for models without measure effect).}
+\item{KI_plot}{TRUE/FALSE, indicating if an additional illustration with the 95\% confidence interval for the measure effect is produced (only of limited use for models without measure effect).}
 
-\item{lang}{Language for output ("en", "fr", "de" or "it").}
+\item{lang}{Language for output ("en", "fr", "de" or "it"), defaults to "en".}
 }
 \value{
-A specific R object (\code{class_effectiveness}) is generated as function output. The main object is the illustration with a graphical analysis of the measures. The function \code{print.class_effectiveness()} is used to extract the most important key figures of the analysis.
+A specific R object (\code{class_effectiveness}) is generated as function output. The main object is the plot with a graphical analysis of the measures' effect. The function \code{print.class_effectiveness()} extracts the most important key figures of the analysis.
 Specifically, the output contains a list of the following elements:
-\item{\code{fit}}{Output of the selected counting regression model (Negative Binomial or Poisson family.}
-\item{\code{modelname}}{Selected model.}
+\item{\code{fit}}{Output of the selected count regression model (Poisson or Negative Binomial family.}
+\item{\code{modelname}}{Selected model scenario.}
 \item{\code{data}}{Prepared data that were used for the analysis.}
 \item{\code{pvalue_measure}}{p-value of the positive measure effect, if it exists.}
 \item{\code{pvalue_interaction}}{p-value of the interaction term, if it exists.}
@@ -66,8 +69,8 @@ Specifically, the output contains a list of the following elements:
 Function to evaluate the effectiveness of measures to reduce traffic accidents.
 }
 \details{
-Traffic accidents before and after the implementation of a traffic measure are analyzed to evaluate the effect of the measure. Since accident are counting data, they are modeled using count regression, by default with a Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a Negative Binomial model. For the situation analysis, six different model scenarios for the measure are evaluated: no effect, trend, effect of measures, measure effect and trend, trend effect, measures and trend effect. The best model is displayed. The exposure can optionally be considered as an offset. The measure effect evaluates the difference directly before and directly after the measure.
-An important assumption in the analysis is, that the implementation of measures is independent of the actual number of accidents. Accident numbers are random variables that fluctuate. If a measure is taken due to a randomly increased number of accidents, this leads to an overestimation of the effect of the measure in the analysis, since in such cases a decrease in the number of accidents can be expected even without a measure (regression-to-the-mean phenomenon). This is particularly problematic for site-specific measures with small accident numbers. Ideally, as the period prior to the measure, only the period after the decision to implement the measure was taken should be considered. In practice, this is difficult because the time periods are too short.
+Traffic accident counts (or rates) before and after the implementation of a traffic measure are analyzed to evaluate the effect of the measure. Since accidents are count data, they are modelled using count regression methods, by default a Poisson model. However, the fit is tested for overdispersion and in case of significant overdispersion the model is automatically replaced by a Negative Binomial model. For flexibly making justice to the specific situation, six different scenarios for the effect of the measure are evaluated using different model formulations: no effect, trend, measure effect, trend effect, measure effect and trend, measure and trend effect. The most suitable mopdel is chosen via AIC, displayed in a plot and commented in printed output. Optionally, traffic exposure can be provided, resulting in the analysis of accident rates. The measure effect evaluates the difference directly before and directly after the measure.
+An important assumption in the analysis is that the decision for traffic measures happens independently of the observed number of accidents. Accident numbers are random variables that fluctuate. If a measure is taken due to a randomly increased number of accidents, this leads to an overestimation of the effect of the measure in the analysis, since in such cases a decrease in the number of accidents can be expected even without a measure (regression-to-the-mean phenomenon). This is particularly problematic for site-specific measures with small accident numbers. Ideally, only observations from the period after the decision to implement a measure should be considered in the effectiveness analysis. In practice however, this often proves difficult because measures are implemented quickly and the remaining time series very short.
 }
 \examples{
   ex1 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')

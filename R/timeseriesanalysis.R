@@ -13,6 +13,7 @@
 #' @param main Optional title for the plot.
 #' @param x_axis Optional, points at which tick-marks are to be drawn.
 #' @param max_y Optional maximum value for the y-axis.
+#' @param min_y Optional minimum value for the y-axis, defaults to 0.
 #' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.
 #' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additional plot of the exposure alone is produced. Only active if exposure is available.
 #' @param lang Language for output ("en", "fr", "de" or "it"), defaults to "en".
@@ -53,7 +54,7 @@
 
 timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until = NULL,
                                pearson_line = TRUE, show_outliers = FALSE,
-                               main = NULL, max_y = NULL, x_axis = NULL,
+                               main = NULL, max_y = NULL, min_y = NULL,  x_axis = NULL,
                                orientation_x = NULL, add_exp = FALSE,  lang = "en"){
   silent = FALSE # silent: parameter to suppress error messages during model evaluation
   ## check mandatory input
@@ -257,6 +258,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   }
   # Base plot
   if (is.null(orientation_x)) orientation_x <- ifelse(diff(as.numeric(format(range(dat_model$Date), '%Y'))) > 8, "v", "h")
+  if (is.null(min_y)) min_y <- 0
   if (is.null(exposition)){
     if (is.null(max_y)){
       max_data <- c(dat_model$accidents, dat_model$expect, dat_model$low, dat_model$upp, dat_model$pearson_line)
@@ -270,7 +272,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       ggplot2::geom_point(ggplot2::aes(colour=col)) +
       ggplot2::scale_colour_manual(values = c("black", "orange", "red"), guide = FALSE) +
       ggplot2::geom_line(ggplot2::aes(y=expect), col="blue")+
-      ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(), expand = c(0, 0), limits = c(0,max_y)) +
+      ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(), expand = c(0, 0), limits = c(min_y, max_y)) +
       ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y")) +
       ggplot2::ggtitle(main) +
       ggplot2::theme_bw()
@@ -282,12 +284,16 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     if (lang == "fr") p <- p + ggplot2::ylab("Accidents")
   }
   if (!is.null(exposition)){
+    if (!is.null(max_y)){
+      scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
+    }
     if (is.null(max_y)){
-      max_data <- c(dat_model$accidents/dat_model$Exp, dat_model$expect/dat_model$Exp, dat_model$low/dat_model$Exp, dat_model$upp/dat_model$Exp,
+      max_data <- c(dat_model$accidents/dat_model$Exp, dat_model$expect/dat_model$Exp, dat_model$low/dat_model$Exp,
+                    dat_model$upp/dat_model$Exp,
                     dat_model$pearson_line/dat_model$Exp)
       max_y <- max(max_data[is.finite(max_data)], na.rm=TRUE)*1.1
+      scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
     }
-    scal <- 10^(floor(log10(ceiling(1/max_y))) + 1)
     p <- ggplot2::ggplot(dat_model,  ggplot2::aes(x=Date, y=accidents/Exp* scal)) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
       ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
@@ -299,7 +305,8 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       ggplot2::scale_x_date(breaks=x_axis, labels = scales::date_format("%Y"))+
       ggplot2::ggtitle(main)+
       ggplot2::theme_bw()
-    if (!add_exp) p <- p + ggplot2::scale_y_continuous(breaks =  scales::pretty_breaks(), expand = c(0, 0), limits=c(0,max_y*scal))
+    if (!add_exp) p <- p + ggplot2::scale_y_continuous(breaks =  scales::pretty_breaks(), expand = c(0, 0),
+                                                       limits=c(min_y*scal, max_y*scal))
     if (pearson_line) p <- p + ggplot2::geom_line(ggplot2::aes(x=Date, y=pearson_line/Exp* scal), linetype=2, colour="orange")
     if (orientation_x == "v")  p <- p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
     if (lang == "en") p <- p + ggplot2::ylab(paste("Accident rate *", formatC(scal, format = "e", digits = 0)))
@@ -311,7 +318,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
       p <- p+ggplot2::geom_point(data=dat_model, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
         ggplot2::geom_line(data=dat_model, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
         ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
-                                    expand = c(0, 0), limits = c(0, max_y * scal),
+                                    expand = c(0, 0), limits = c(min_y * scal, max_y * scal),
                                     sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1, name="exposition"))
       p2 <- ggplot2::ggplot(dat_model,  ggplot2::aes(x=Date, y=Exp)) +
         ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
