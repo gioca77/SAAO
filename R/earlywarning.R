@@ -13,7 +13,7 @@
 #' @param pred.level Level of the prediction interval, if NULL (default) the empirical distribution of the prediction interval, expressed as return periods, is shown.
 #' @param alternative A character string specifying if the return period / prediction interval are calculated one- or two-sided, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.
 #' @param main Optional title for the plot.
-#' @param x_axis Optional vector with tick labels (???????) for the x-axis. Required length (???????)
+#' @param x_axis Optional, points at which tick-marks are to be drawn.
 #' @param max_y Optional maximum value for the y-axis. The y-axis always starts from a value of 0.
 #' @param orientation_x Alignment of the tick labels on the x-axis; "v" for vertical, "h" for horizontal. By default horizontal alignment is selected for 8 years or less.
 #' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additional plot of the exposure alone is produced. Only active if exposure is available.
