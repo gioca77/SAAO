@@ -5,24 +5,24 @@
 #' @details
 #' The function provides functionality to evaluate if a new, additional data point in a traffic accident count data time series is compatible with the past evolution of the series. It is based on simulated bootstrap prediction intervals that can also be displayed in the form of return periods. If a new, additional data point is declared as striking, it means that either an exceptional event happened or that there is a disruption in the data generating process.
 # 'The simulation of the interval is passed on the Poisson or, if overdispersion is detected, Negative Binomial model with the accident data in the previous years. With the model a prediction for the new year is executed. The expected value for the new observation is simulated from a normal distribution with the predicted value and the standard deviation of the prediction on the link scale. The simulated expected values are transformed back into the observation scale and used to simulate random observations using the Poisson or Negative Binomial distribution.
-#' @param accidents Either an R date/time or character vector with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.
+#' @param accidents Either an R date/time or character vector with accident dates. For character vectors, only the following date formats are allowed: '2014-04-22', '2014/04/22', '22.4.2014'.
 #' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. DEFAULT NULL.
 #' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until what date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
 #' @param n Number of simulations.
-#' @param pred.level Level of the prediction interval, if NULL (default) an interval with return periods is constructed
-#' @param alternative A character string specifying if the return period / prediction interval are calculate one or two sided, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.
+#' @param pred.level Level of the prediction interval, if NULL (default) the empirical distribution of the prediction interval, expressed as return periods, is shown.
+#' @param alternative A character string specifying if the return period / prediction interval are calculated one- or two-sided, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.
 #' @param main Optional title for the plot.
-#' @param x_axis Optional vector with the values for the x-axis.
-#' @param max_y Optional maximum value for the y-axis.
-#' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.
-#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is stated.
-#' @param lang Language for output ("en", "fr", "de" or "it").
+#' @param x_axis Optional vector with tick labels (???????) for the x-axis. Required length (???????)
+#' @param max_y Optional maximum value for the y-axis. The y-axis always starts from a value of 0.
+#' @param orientation_x Alignment of the tick labels on the x-axis; "v" for vertical, "h" for horizontal. By default horizontal alignment is selected for 8 years or less.
+#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additional plot of the exposure alone is produced. Only active if exposure is available.
+#' @param lang Language for output ("en", "fr", "de" or "it"), defaults to "en".
 #' @seealso \code{\link[STAAD:timeseriesanalysis]{timeseriesanalysis()}} function to evaluate the trend in a traffic accident time series.
-#' @return A specific R object (\code{class_earlywarning}) is generated as function output. The main object is the illustration with the prediction interval for the newest observation in the time-serie. The function \code{print.class_earlywarnin()} is used to extract the most important key figures of the analysis.
+#' @return A specific R object (\code{class_earlywarning}) is generated as function output. The main object is the plot with the prediction interval for the newest observation in the time-serie. The function \code{print.class_earlywarning()} is used to extract the most important key figures of the analysis.
 #' Specifically, the output contains a list of the following elements:
 #' \item{\code{ci}}{Prediction interval or limits for a 5-, 10-, 20- and 100-year event for the new value.}
-#' \item{\code{fit}}{Output of the counting regression model (Negative Binomial or Poisson family.}
+#' \item{\code{fit}}{Output of the count regression model (Negative Binomial or Poisson family.}
 #' \item{\code{return_period}}{Return period for the new value.}
 #' \item{\code{data}}{Prepared data that were used for the analysis.}
 #' \item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
