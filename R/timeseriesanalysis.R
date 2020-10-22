@@ -3,26 +3,26 @@
 #' @description Function to evaluate the trend in a traffic accident time series.
 #'
 #' @details
-#' The function provides a tool for a time-series monitoring to analyze general trends of accident count data. The methodology is based on Poisson model. However, the model is tested for overdispersion and in case of significant overdispersion it is automatically switched to a Negative Binomial regression. The model enables the user to quantify observed trends and assess their statistical significance (reliability of results). The time resolution for accidentperiods is one year. The start date is freely selectable. Due to the seasons, the independence of the data series cannot be guaranteed for analyses during the year.
-#' @param accidents Either an R date/time or character vector with accident dates. For character vectors, the following date formats are allowed '2014-04-22', '2014/04/22' respectively '22.4.2014'.
+#' The function provides methodology for analyzing general trends in a time series of accident count data. It is based on the Poisson model. However, the fit is tested for overdispersion and in case of significant overdispersion it is automatically replaced by a Negative Binomial regression. The model enables the user to quantify observed trends and assess their statistical significance (reliability of results). The time resolution for accident periods is fixed at one year to avoid potential nuisance by seasonality. However, the start date for the analysis can be freely selected.
+#' @param accidents Either an R date/time or character vector with accident dates. For character vectors, only the following date formats are allowed: '2014-04-22', '2014/04/22', '22.4.2014'.
 #' @param exposition Optional data frame with exposition data. The first column is the time value, the second column the exposure. If the time value is a specific date (e.g. '22.4.2014'), this is considered as the start date of this exposure. If the time value is a year (format '2010') the exposure is taken for the whole year. Exposure values are extended until a new entry is available. If necessary, the first exposure value is extended backwards. DEFAULT NULL.
 #' @param from From which date or year (1.1.) the time series should be considered. Optional. If not specified, the 1.1 from the year of the earliest accident is used.
 #' @param until Until what date or year (31.12) the time series should be considered. Optional. If not specified, the 31.12 from the year of the latest accident is used.
-#' @param pearson_line TRUE/FALSE if line for Pearson residual equal 2 should be drawn or not.
-#' @param show_outliers FALSE/TRUE if outliers with Pearson residual greater than 2 should be highlighted in color.
+#' @param pearson_line TRUE/FALSE, indicating if the line for Pearson residual equal 2 should be drawn or not.
+#' @param show_outliers FALSE/TRUE, indicating if outliers with Pearson residual greater than 2 should be highlighted in color or not.
 #' @param main Optional title for the plot.
-#' @param x_axis Optional vector with the values for the x-axis.
+#' @param x_axis Optional, points at which tick-marks are to be drawn.
 #' @param max_y Optional maximum value for the y-axis.
 #' @param orientation_x Alignment of the labels of the x-axis; "v" for vertical, "h" for horizontal, by default horizontal alignment is selected for 8 years or less.
-#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additionally plot of the exposure alone is produced. Only active if exposure is stated.
-#' @param lang Language for output ("en", "fr", "de" or "it").
-#' @seealso \code{\link[STAAD:earlywarning]{earlywarning()}} function for early warning, which alerts the user if the current annual accident incidence is remarkably higher than in previous years.
-#' @return A specific R object (\code{class_timeseriesanalyis}) is generated as function output. The main object is the illustration with a graphical analysis of the trend in the time-serie. The function \code{print.class_timeseriesanalyis()} is used to extract the most important key figures of the analysis.
+#' @param add_exp Option to supplement the output plot with the exposure as an additional axis. Furthermore an additional plot of the exposure alone is produced. Only active if exposure is available.
+#' @param lang Language for output ("en", "fr", "de" or "it"), defaults to "en".
+#' @seealso \code{\link[STAAD:earlywarning]{earlywarning()}} function for early warning, which alerts the user if the current annual accident incidence is significantly higher than in previous years.
+#' @return A specific R object (\code{class_timeseriesanalyis}) is generated as function output. The main object is the plot with a graphical analysis of the trend in the time series. The function \code{print.class_timeseriesanalyis()} is used to extract the most important key figures of the analysis.
 #' Specifically, the output contains a list of the following elements:
-#' \item{\code{fit}}{Output of the counting regression model (Negative Binomial or Poisson family.}
+#' \item{\code{fit}}{Output of the count regression model (Poisson or Negative Binomial family.}
 #' \item{\code{data}}{Prepared data that were used for the analysis.}
 #' \item{\code{trend}}{Annual trend}
-#' \item{\code{pvalue_trend}}{p-value for the trend coefficient.}
+#' \item{\code{pvalue_trend}}{p-value for the null hypothesis that the trend equals 0.}
 #' \item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
 #' \item{\code{plot}}{Plot graphical analysis (ggplot-class).}
 #' \item{\code{lang}}{Selected language.}
