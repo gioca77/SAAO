@@ -269,24 +269,24 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
                    "Effet des mesures", "Tendance", "aucun effet")
     reliability <- c("pas fiable, pas d'effet prouve", "tres fiable", "assez fiable", "faiblement fiable")
     measure <- "Effet des mesures"
-    locations <- paste("Evaluation of the combined measure effect from", object$cases, "locations.")
-    exp_locations <- paste0("(", object$cases_exp, " locations with exposition data.)")
+    locations <- paste("Evaluation des effets des mesures combinees pour", object$cases, "sites.")
+    exp_locations <- paste0("(", object$cases_exp, " sites avec donnees d'exposition.)")
     model <- "model"
     nb <- "binomiale negative"
     pv <- "valeur p"
-    od <- "overdispersion"
+    od <- "surdispersion"
   }
   if (object$lang == "it"){
     modelname <- c("Misure ed effetto tendenza", "Effetto tendenza", "Effetto delle misure ed tendenza",
                    "Effetto delle misure", "Tendenza", "nessun effett")
     reliability <- c("non affidabile, nessun effett provato", "altamente affidabile", "altamente affidabile",
                      "debolmente affidabile")
-    locations <- paste("Evaluation of the combined measure effect from", object$cases, "locations.")
-    exp_locations <- paste0("(", object$cases_exp, " locations with exposition data.)")
+    locations <- paste("Valutazione dell'effetto di misura combinato di", object$cases, "posizioni.")
+    exp_locations <- paste0("(", object$cases_exp, " posizioni con dati di esposizione.)")
     measure <- "Effetto delle misure"
     model <- "modello"
     nb <- "binomiale negativa"
-    pv <- "Valore p"
+    pv <- "valore p"
     od <- "overdispersion"
   }
   if (is.na(object$conf_limit)){

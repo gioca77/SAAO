@@ -317,7 +317,9 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
       if(is.na(conf_limit)) conf_limit <- "> 99.99"
       if (is.na(pvalue_interaction) & lang %in% c("en", "fr", "it")) pvalue_measure <- paste("No overlap of the ", conf_limit, "%-confidence intervals.", sep="")
       if (is.na(pvalue_interaction) & lang == "de") pvalue_measure <- paste("Keine Ueberlappung der ", conf_limit, "%-Konfidenzintervalle.", sep="")
-      if (is.na(pvalue_interaction) & lang %in% c("en", "fr", "it")) pvalue_measure <- paste(pvalue_measure, " !Attention the trend increases more after the measure than before!", sep="")
+      if (is.na(pvalue_interaction) & lang == "en") pvalue_measure <- paste(pvalue_measure, " !Attention the trend increases more after the measure than before!", sep="")
+      if (is.na(pvalue_interaction) & lang == "fr") pvalue_measure <- paste(pvalue_measure, " !Attention la tendance augemente plus fortement apres la mesure qu'auparavant!", sep="")
+      if (is.na(pvalue_interaction) & lang == "it") pvalue_measure <- paste(pvalue_measure, " !Attenzione - la tendenza aumenta piu fortemente dopo la misura rispetto a prima!", sep="")
       if (is.na(pvalue_interaction) & lang == "de") pvalue_measure <- paste(pvalue_measure, " !Achtung der Trend steigt nach der Massnahme staerker als davor!", sep="")
     }
   }
@@ -511,10 +513,19 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     if (add_exp){
       scal_acci <- ceiling(max(dat_total$Exp)/(max_y*scal)) * 1.05
       p <- p+ggplot2::geom_point(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "darkgrey")+
-        ggplot2::geom_line(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "darkgrey")+
-        ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
-                                    expand = c(0, 0), limits = c(min_y *scal, max_y * scal),
-                                    sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1, name="exposition"))
+        ggplot2::geom_line(data=dat_total, ggplot2::aes(y = Exp/scal_acci), colour = "darkgrey")
+      if (lang %in% c("fr", "en")) p <- p + ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                                             expand = c(0, 0), limits = c(min_y *scal, max_y * scal),
+                                                             sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1,
+                                                                                        name="exposition"))
+      if (lang == "de") p <- p + ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                                             expand = c(0, 0), limits = c(min_y *scal, max_y * scal),
+                                                             sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1,
+                                                                                        name="Exposition"))
+      if (lang == "it") p <- p + ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                                             expand = c(0, 0), limits = c(min_y *scal, max_y * scal),
+                                                             sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1,
+                                                                                        name="esposizione"))
       p3 <- ggplot2::ggplot(dat_total,  ggplot2::aes(x=Date, y=Exp)) +
         ggplot2::geom_vline(xintercept=before_bor$Date, colour="darkgrey", linetype=2) +
         ggplot2::geom_vline(xintercept=after_bor$Date, colour="darkgrey", linetype=2) +
@@ -528,6 +539,7 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
         ggplot2::theme_bw()
       if (orientation_x == "v")  p3 <- p3 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
       if (lang == "de") p3 <- p3 + ggplot2::ylab("Exposition")
+      if (lang == "it") p3 <- p3 + ggplot2::ylab("esposizione")
     }
   }
   if (lang == "de") p <- p + ggplot2::xlab("Datum")
@@ -606,17 +618,18 @@ effectiveness <- function(accidents, measure_start, measure_end, exposition = NU
     model <- "model"
     nb <- "binomiale negative"
     pv <- "valeur p"
-    od <- "overdispersion"
+    od <- "surdispersion"
   }
   if (object$lang == "it"){
-    modelname <- c("Misure ed effetto tendenza", "Effetto tendenza", "Effetto delle misure ed tendenza",
+    modelname <- c("Misure ed effetto tendenza", "Effetto tendenza",
+                   "Effetto delle misure e della tendenza",
                    "Effetto delle misure", "Tendenza", "nessun effett")
     reliability <- c("non affidabile, nessun effett provato", "altamente affidabile", "altamente affidabile",
                      "debolmente affidabile")
     measure <- "Effetto delle misure"
     model <- "modello"
     nb <- "binomiale negativa"
-    pv <- "Valore p"
+    pv <- "valore p"
     od <- "overdispersion"
   }
   if (is.na(object$conf_limit)){

@@ -12,6 +12,7 @@ earlywarning(
   n = 1e+06,
   pred.level = NULL,
   alternative = "greater",
+  output_return = TRUE,
   main = NULL,
   x_axis = NULL,
   max_y = NULL,
@@ -36,6 +37,8 @@ earlywarning(
 
 \item{alternative}{A character string specifying if the return period / prediction interval are calculated one- or two-sided, must be one of "greater" (default), "two.sided" or "less". You can specify just the initial letter.}
 
+\item{output_return}{TRUE/FALSE Option to show uncertainty ranges as return periods (TRUE) or as probabilities (FALSE). Only active if pred.level is NULL.}
+
 \item{main}{Optional title for the plot.}
 
 \item{x_axis}{Optional, points at which tick-marks are to be drawn.}
@@ -53,9 +56,9 @@ earlywarning(
 \value{
 A specific R object (\code{class_earlywarning}) is generated as function output. The main object is the plot with the prediction interval for the newest observation in the time-serie. The function \code{print.class_earlywarning()} is used to extract the most important key figures of the analysis.
 Specifically, the output contains a list of the following elements:
-\item{\code{ci}}{Prediction interval or limits for a 5-, 10-, 20- and 100-year event for the new value.}
+\item{\code{ci}}{Prediction interval or limits for a 5-, 10-, 20- and 100-year event respectively 20\%, 10\%, 5\% and 1\% return probabilty for the new value.}
 \item{\code{fit}}{Output of the count regression model (Negative Binomial or Poisson family.}
-\item{\code{return_period}}{Return period for the new value.}
+\item{\code{return_value}}{Return period respectively return probabilty for the new value.}
 \item{\code{data}}{Prepared data that were used for the analysis.}
 \item{\code{test_overdisp}}{p-value of the deviance dispersion test.}
 \item{\code{pred.level}}{Level of the prediction interval.}

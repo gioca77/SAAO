@@ -9,7 +9,7 @@ Authors@R: c(
 Description: The package offers simple, automated tools for the statistical 
     analysis of accident time series and for evaluating the efficiency of 
 	traffic measures on the accident occurrence.
-Depends: R (>= 3.6.1)
+Depends: R (>= 3.6.0)
 Imports:
     ggplot2,
 	gridExtra,

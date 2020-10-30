@@ -316,10 +316,20 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     if (add_exp){
       scal_acci <- ceiling(max(dat_model$Exp)/(max_y*scal)) * 1.05
       p <- p+ggplot2::geom_point(data=dat_model, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
-        ggplot2::geom_line(data=dat_model, ggplot2::aes(y = Exp/scal_acci), colour = "grey")+
-        ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
-                                    expand = c(0, 0), limits = c(min_y * scal, max_y * scal),
-                                    sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1, name="exposition"))
+        ggplot2::geom_line(data=dat_model, ggplot2::aes(y = Exp/scal_acci), colour = "grey")
+      if (lang %in% c("fr", "en")) p <- p + ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                                                        expand = c(0, 0), limits = c(min_y *scal,
+                                                                                                     max_y * scal),
+                                                                        sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1,
+                                                                                                   name="exposition"))
+      if (lang == "de") p <- p + ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                                             expand = c(0, 0), limits = c(min_y *scal, max_y * scal),
+                                                             sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1,
+                                                                                        name="Exposition"))
+      if (lang == "it") p <- p + ggplot2::scale_y_continuous(breaks = scales::pretty_breaks(),
+                                                             expand = c(0, 0), limits = c(min_y *scal, max_y * scal),
+                                                             sec.axis=ggplot2::sec_axis(~.*scal_acci * 1.1,
+                                                                                        name="esposizione"))
       p2 <- ggplot2::ggplot(dat_model,  ggplot2::aes(x=Date, y=Exp)) +
         ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
         ggplot2::geom_vline(xintercept=timeserie, colour="darkgrey", linetype=2) +
@@ -333,6 +343,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
         ggplot2::theme_bw()
       if (orientation_x == "v")  p2 <- p2 + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
       if (lang == "de") p2 <- p2 + ggplot2::ylab("Exposition")
+      if (lang == "it") p3 <- p3 + ggplot2::ylab("esposizione")
     }
   }
   trend <- as.numeric((exp(summary(fit)$coefficients["Date", 1])-1) * difftime(until, from, units="day") / dim(dat_model)[1])
@@ -381,10 +392,10 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     trend <- "Tendance"
     rise <- "augmentation annuelle de"
     fall <- "diminution annuelle de"
-    model <- "model"
+    model <- "modele"
     nb <- "binomiale negative"
     pv <- "valeur p"
-    od <- "overdispersion"
+    od <- "surdispersion"
   }
   if (object$lang == "it"){
     reliability <- c("non affidabile, nessun effett provato", "altamente affidabile", "altamente affidabile",
@@ -394,7 +405,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     fall <- "decremento annuo del"
     model <- "modello"
     nb <- "binomiale negativa"
-    pv <- "Valore p"
+    pv <- "valore p"
     od <- "overdispersion"
   }
   direction <- ifelse(object$trend >= 0, rise, fall)
