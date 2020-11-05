@@ -444,7 +444,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   if (lang == "de" & !is.null(pred.level)) p <- p +
     ggplot2::scale_color_manual(name = "",
                                 values = c("1"="orange"),
-                                labels = paste0(pred.level*100, "% intervalle de fluctuation"))
+                                labels = paste0(pred.level*100, "% Prognoseintervall"))
   if (lang == "fr" & is.null(pred.level) & output_return) p <- p +
     ggplot2::scale_color_manual(name = "Periode de retour",
                                 values = c("1"="brown", "2"="blue", "3"="green", "4"="orange"),
@@ -496,7 +496,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   if (object$lang == "en"){
     striking <- "striking"
     nstriking <- "not striking"
-    ci <- "Prognoseintervall"
+    ci <- "prediction interval"
     model <- "model"
     nb <- "negative binomial"
     pm <- "poisson"
@@ -509,7 +509,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
   if (object$lang == "de"){
     striking <- "auffaellig"
     nstriking <- "nicht auffaellig"
-    ci <- "prediction interval"
+    ci <- "Prognoseintervall"
     model <- "Modell"
     nb <- "Negative Binomial"
     pm <- "Poisson"
