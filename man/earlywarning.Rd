@@ -73,26 +73,22 @@ Function to determine and visualize prediction intervals for new, additional dat
 The function provides functionality to evaluate if a new, additional data point in a traffic accident count data time series is compatible with the past evolution of the series. It is based on simulated bootstrap prediction intervals that can also be displayed in the form of return periods. If a new, additional data point is declared as striking, it means that either an exceptional event happened or that there is a disruption in the data generating process.
 }
 \examples{
-  ex1 <- earlywarning(accidents = example1_timeserie)
+  ex1 <- earlywarning(example_earlywarnung)
   print(ex1)
   plot(ex1)
   summary(ex1)
   summary(ex1$fit)
-  ex2 <- earlywarning(accidents = example2_timeserie, lang = "de")
+  ex2 <-earlywarning(example_earlywarnung, pred.level = 0.95)
   ex2
-  ex3 <- earlywarning(accidents = example3_timeserie, lang = "it")
-  print(ex3)
-  ex4 <- earlywarning(accidents = example4_timeserie, lang = "de")
-  print(ex4)
+  ex3 <-earlywarning(example_earlywarnung, pred.level = 0.99)
+  ex3
+  ex4 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex1)
   plot(ex4)
-  summary(ex4)
-  ex5 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex1)
-  plot(ex5)
-  ex6 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex2, add_exp = TRUE)
-  print(ex6)
-  plot(ex6$plot_exposition)
-  ex7 <- earlywarning(accidents = example3_timeserie, exposition=exposition_ex3)
-  summary(ex7)
+  ex5 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex2, add_exp = TRUE)
+  print(ex5)
+  plot(ex5$plot_exposition)
+  ex6 <- earlywarning(accidents = example3_timeserie, exposition=exposition_ex3)
+  summary(ex6)
 }
 \seealso{
 \code{\link[STAAD:timeseriesanalysis]{timeseriesanalysis()}} function to evaluate the trend in a traffic accident time series.

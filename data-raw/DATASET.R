@@ -55,6 +55,14 @@ example4_timeserie <- zeit_sim(n=14, mu=8, beta=1.02, disp=20)
 
 usethis::use_data(example4_timeserie, overwrite = TRUE)
 
+# Zeitreihe Fruewarnsystem
+set.seed(4)
+example_earlywarnung <- zeit_sim(n=14, mu=10, beta=1.01, disp=0)
+length(example_earlywarnung)
+example_earlywarnung <- c(example_earlywarnung, example_earlywarnung[158:169] + 10)
+
+usethis::use_data(example_earlywarnung, overwrite = TRUE)
+
 
 
 ### Funktion fuer Generieren von Zeitreihen mit Massnahmen-/Trendeffekt

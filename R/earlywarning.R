@@ -34,26 +34,22 @@
 #' \item{\code{plot_exposition}}{Addional plot of the exposition, if available (ggplot-class).}
 #' @export
 #' @examples
-#'   ex1 <- earlywarning(accidents = example1_timeserie)
+#'   ex1 <- earlywarning(example_earlywarnung)
 #'   print(ex1)
 #'   plot(ex1)
 #'   summary(ex1)
 #'   summary(ex1$fit)
-#'   ex2 <- earlywarning(accidents = example2_timeserie, lang = "de")
+#'   ex2 <-earlywarning(example_earlywarnung, pred.level = 0.95)
 #'   ex2
-#'   ex3 <- earlywarning(accidents = example3_timeserie, lang = "it")
-#'   print(ex3)
-#'   ex4 <- earlywarning(accidents = example4_timeserie, lang = "de")
-#'   print(ex4)
+#'   ex3 <-earlywarning(example_earlywarnung, pred.level = 0.99)
+#'   ex3
+#'   ex4 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex1)
 #'   plot(ex4)
-#'   summary(ex4)
-#'   ex5 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex1)
-#'   plot(ex5)
-#'   ex6 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex2, add_exp = TRUE)
-#'   print(ex6)
-#'   plot(ex6$plot_exposition)
-#'   ex7 <- earlywarning(accidents = example3_timeserie, exposition=exposition_ex3)
-#'   summary(ex7)
+#'   ex5 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex2, add_exp = TRUE)
+#'   print(ex5)
+#'   plot(ex5$plot_exposition)
+#'   ex6 <- earlywarning(accidents = example3_timeserie, exposition=exposition_ex3)
+#'   summary(ex6)
 
 earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 1000000,
                          pred.level = NULL, alternative = "greater",  output_return = TRUE, main = NULL,
@@ -504,7 +500,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     pv <- "p-value"
     od <- "overdispersion"
     if (object$output_return) rp <- paste0(rp_w, "-year event")
-    if (!object$output_return) rp <- paste0(rp_w*100, "% event")
+    if (!object$output_return) rp <- paste0(rp_w*100, "% of the events are as or more extreme")
   }
   if (object$lang == "de"){
     striking <- "auffaellig"
@@ -517,7 +513,7 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     pv <- "p-Wert"
     od <- "Overdispersion"
     if (object$output_return) rp <- paste0(rp_w, "-jaehriges Ereignis")
-    if (!object$output_return) rp <- paste0(rp_w*100, "% Ereignis")
+    if (!object$output_return) rp <- paste0(rp_w*100, "% der Ereignisse sind gleich oder extremer")
   }
   if (object$lang == "fr"){
     striking <- "remarquable"
