@@ -75,7 +75,7 @@ The function provides methodology for analyzing general trends in a time series 
   ex2
   ex3 <- timeseriesanalysis(accidents = example3_timeserie, lang = "it")
   print(ex3)
-  ex4 <- timeseriesanalysis(accidents = example4_timeserie, lang = "de")
+  ex4 <- timeseriesanalysis(accidents = example4_timeserie, lang = "fr")
   print(ex4)
   plot(ex4)
   summary(ex4)

@@ -39,7 +39,7 @@
 #'   ex2
 #'   ex3 <- timeseriesanalysis(accidents = example3_timeserie, lang = "it")
 #'   print(ex3)
-#'   ex4 <- timeseriesanalysis(accidents = example4_timeserie, lang = "de")
+#'   ex4 <- timeseriesanalysis(accidents = example4_timeserie, lang = "fr")
 #'   print(ex4)
 #'   plot(ex4)
 #'   summary(ex4)
@@ -374,6 +374,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     fall <- "annual decrease of"
     model <- "model"
     nb <- "Negative binomial"
+    pm <- "Poisson"
     pv <- "p-value"
     od <- "overdispersion"
   }
@@ -384,6 +385,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     fall <- "jaehrlicher Abnahme von"
     model <- "Modell"
     nb <- "Negative Binomial"
+    pm <- "Poisson"
     pv <- "p-Wert"
     od <- "Overdispersion"
   }
@@ -394,6 +396,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     fall <- "diminution annuelle de"
     model <- "modele"
     nb <- "binomiale negative"
+    pm <- "poisson"
     pv <- "valeur p"
     od <- "surdispersion"
   }
@@ -405,6 +408,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
     fall <- "decremento annuo del"
     model <- "modello"
     nb <- "binomiale negativa"
+    pm <- "poisson"
     pv <- "valore p"
     od <- "overdispersion"
   }
@@ -429,7 +433,7 @@ timeseriesanalysis <- function(accidents, exposition = NULL, from = NULL, until 
   }
   if (is.null(object$fit$theta))
   {
-    cat(paste(object$fit$family$family, model))
+    cat(paste(pm, model))
   }
   cat("\n", paste(pv, od, round(object$test_overdisp, 3)))
   cat("\n", paste0(trend,": ", direction, " ", round(object$trend*100, 2), "% (", reliability[k] ,")"))

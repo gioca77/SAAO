@@ -249,6 +249,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
     exp_locations <- paste0("(", object$cases_exp, " locations with exposition data.)")
     model <- "model"
     nb <- "Negative binomial"
+    pm <- "Poisson"
     pv <- "p-value"
     od <- "overdispersion"
   }
@@ -261,6 +262,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
     exp_locations <- paste0("(", object$cases_exp, " Standorte mit Expositionsdaten.)")
     model <- "Modell"
     nb <- "Negative Binomial"
+    pm <- "Poisson"
     pv <- "p-Wert"
     od <- "Overdispersion"
   }
@@ -273,6 +275,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
     exp_locations <- paste0("(", object$cases_exp, " sites avec donnees d'exposition.)")
     model <- "model"
     nb <- "binomiale negative"
+    pm <- "poisson"
     pv <- "valeur p"
     od <- "surdispersion"
   }
@@ -286,6 +289,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
     measure <- "Effetto delle misure"
     model <- "modello"
     nb <- "binomiale negativa"
+    pm <- "poisson"
     pv <- "valore p"
     od <- "overdispersion"
   }
@@ -326,7 +330,7 @@ effectiveness_multiple <- function(accidents, measure_start, measure_end,
   }
   if (is.null(object$fit$theta))
   {
-    cat("\n", paste(object$fit$family$family, model))
+    cat("\n", paste(pm, model))
   }
   cat("\n", paste(pv, od, round(object$test_overdisp, 3)))
   if (!is.na(object$conf_limit)) cat("\n", paste0(measure,": ", reliability[k], " (",object$pvalue_measure, ")"))

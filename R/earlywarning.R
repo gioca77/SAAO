@@ -43,12 +43,12 @@
 #'   ex2
 #'   ex3 <-earlywarning(example_earlywarnung, pred.level = 0.99)
 #'   ex3
-#'   ex4 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex1)
+#'   ex4 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex1, lang = "de")
 #'   plot(ex4)
-#'   ex5 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex2, add_exp = TRUE)
+#'   ex5 <- earlywarning(accidents = example1_timeserie, exposition=exposition_ex2, add_exp = TRUE, lang = "fr")
 #'   print(ex5)
 #'   plot(ex5$plot_exposition)
-#'   ex6 <- earlywarning(accidents = example3_timeserie, exposition=exposition_ex3)
+#'   ex6 <- earlywarning(accidents = example3_timeserie, exposition=exposition_ex3, lang = "it")
 #'   summary(ex6)
 
 earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL, n = 1000000,
@@ -494,8 +494,8 @@ earlywarning <- function(accidents, exposition = NULL, from = NULL, until = NULL
     nstriking <- "not striking"
     ci <- "prediction interval"
     model <- "model"
-    nb <- "negative binomial"
-    pm <- "poisson"
+    nb <- "Negative binomial"
+    pm <- "Poisson"
     val <- "observation"
     pv <- "p-value"
     od <- "overdispersion"

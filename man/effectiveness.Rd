@@ -86,12 +86,12 @@ An important assumption in the analysis is that the decision for traffic measure
   ex4
   ex5 <- effectiveness(accidents = example_trend, measure_start = '1.1.2013', measure_end = '1.1.2013')
   print(ex5)
-  ex6 <- effectiveness(accidents = example_trend_effect, measure_start = '1.1.2011', measure_end = '1.1.2011')
+  ex6 <- effectiveness(accidents = example_trend_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', lang = "fr")
   print(ex6)
   ex7 <- effectiveness(accidents = example_no_effect, measure_start = '1.1.2011', measure_end = '1.1.2011', exposition = exposition_ex1, lang = "de")
   summary(ex7)
   plot(ex7)
-  ex8 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2012', measure_end = '1.4.2012', exposition = exposition_ex2, add_exp = TRUE)
+  ex8 <- effectiveness(accidents = example_measure_effect, measure_start = '1.1.2012', measure_end = '1.4.2012', exposition = exposition_ex2, add_exp = TRUE, lang = "it")
   plot(ex8)
   plot(ex8$plot_exposition)
 }
